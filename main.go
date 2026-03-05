@@ -126,11 +126,11 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
-	case "up", "k":
+	case "up", "k", "ctrl+p":
 		if m.menuCursor > 0 {
 			m.menuCursor--
 		}
-	case "down", "j":
+	case "down", "j", "ctrl+n":
 		if m.menuCursor < len(m.filteredModes)-1 {
 			m.menuCursor++
 		}
@@ -164,7 +164,6 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		key := msg.String()
 		if len(key) == 1 {
 			m.searchInput += key
-			m.menuCursor = 0
 			m.updateFilteredModes()
 		}
 	}
@@ -381,7 +380,7 @@ func (m model) viewMenu() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(subtitleStyle.Render("type to search • ↑/↓: navigate • enter: select • esc: clear/quit"))
+	b.WriteString(subtitleStyle.Render("type to search • ↑/↓/ctrl-n/ctrl-p: navigate • enter: select • esc: clear/quit"))
 
 	return b.String()
 }
