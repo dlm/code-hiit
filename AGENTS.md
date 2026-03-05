@@ -38,14 +38,33 @@ The goal is to help users improve typing skills for numbers, symbols, and code p
      - `main.go` - Bubble Tea UI and logic
      - `history.go` - Session persistence
 
-4. **When handing off:**
-   ```bash
-   td handoff <task-id> \
-     --done "What you completed" \
-     --remaining "What's left to do" \
-     --uncertain "Any blockers or questions"
+4. **When handing off or completing work:**
 
-   td review <task-id>    # Submit for review
+   **CRITICAL**: ALWAYS do a proper handoff BEFORE submitting for review!
+
+   ```bash
+   # Step 1: Create detailed handoff (REQUIRED)
+   td handoff <task-id> \
+     --done "Detailed list of what you completed" \
+     --remaining "What's left to do (or 'None' if complete)" \
+     --uncertain "Any blockers or questions (or 'None')"
+
+   # Step 2: ONLY AFTER handoff, submit for review
+   td review <task-id>
+   ```
+
+   **BAD PRACTICE**: Never run `td review` without doing `td handoff` first!
+   The auto-generated handoff is minimal and doesn't document your work properly.
+
+   **GOOD HANDOFF EXAMPLE**:
+   ```bash
+   td handoff td-abc123 \
+     --done "Created custom.go with LoadCustomSnippets() function. \
+             Added Custom difficulty to types.go. Updated main.go menu. \
+             Modified GetRandomSnippet, GetSnippet, GetNextSnippet functions. \
+             Created .typing-snippets.example.json. Tested functionality." \
+     --remaining "None - feature complete and ready for review" \
+     --uncertain "None - all functionality tested and working"
    ```
 
 5. **If task is complete:**
