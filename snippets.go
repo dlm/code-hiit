@@ -1308,6 +1308,18 @@ $
 }
 
 func GetRandomSnippet(difficulty Difficulty) CodeSnippet {
+	if difficulty == Custom {
+		customSnippets, err := LoadCustomSnippets()
+		if err != nil || len(customSnippets) == 0 {
+			return CodeSnippet{
+				Content:    "# No custom snippets found\n# Create ~/.typing-snippets.json to add your own!\n# Example:\n# {\n#   \"snippets\": [\n#     {\"content\": \"your code here\", \"language\": \"Go\"}\n#   ]\n# }",
+				Language:   "Info",
+				Difficulty: Custom,
+			}
+		}
+		return customSnippets[rand.Intn(len(customSnippets))]
+	}
+
 	snippetList := snippets[difficulty]
 	if len(snippetList) == 0 {
 		return CodeSnippet{}
@@ -1316,6 +1328,14 @@ func GetRandomSnippet(difficulty Difficulty) CodeSnippet {
 }
 
 func GetSnippet(difficulty Difficulty, index int) CodeSnippet {
+	if difficulty == Custom {
+		customSnippets, err := LoadCustomSnippets()
+		if err != nil || len(customSnippets) == 0 {
+			return GetRandomSnippet(Custom) // Return help message
+		}
+		return customSnippets[index%len(customSnippets)]
+	}
+
 	snippetList := snippets[difficulty]
 	if len(snippetList) == 0 {
 		return CodeSnippet{}
@@ -1324,6 +1344,15 @@ func GetSnippet(difficulty Difficulty, index int) CodeSnippet {
 }
 
 func GetNextSnippet(difficulty Difficulty, currentIndex int) (CodeSnippet, int) {
+	if difficulty == Custom {
+		customSnippets, err := LoadCustomSnippets()
+		if err != nil || len(customSnippets) == 0 {
+			return GetRandomSnippet(Custom), 0 // Return help message
+		}
+		nextIndex := (currentIndex + 1) % len(customSnippets)
+		return customSnippets[nextIndex], nextIndex
+	}
+
 	snippetList := snippets[difficulty]
 	if len(snippetList) == 0 {
 		return CodeSnippet{}, 0

@@ -13,6 +13,7 @@ const (
 	HexNumbers
 	Brackets
 	RegexPatterns
+	Custom
 )
 
 type CodeSnippet struct {

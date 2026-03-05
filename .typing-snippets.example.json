@@ -1,0 +1,24 @@
+{
+  "snippets": [
+    {
+      "content": "fn main() {\n    println!(\"Hello, world!\");\n}",
+      "language": "Rust"
+    },
+    {
+      "content": "package main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello, Go!\")\n}",
+      "language": "Go"
+    },
+    {
+      "content": "const greet = (name: string): string => {\n    return `Hello, ${name}!`;\n};",
+      "language": "TypeScript"
+    },
+    {
+      "content": "def factorial(n: int) -> int:\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)",
+      "language": "Python"
+    },
+    {
+      "content": "#include <iostream>\n\nint main() {\n    std::cout << \"C++ rocks!\" << std::endl;\n    return 0;\n}",
+      "language": "C++"
+    }
+  ]
+}
