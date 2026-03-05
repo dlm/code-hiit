@@ -1312,7 +1312,7 @@ func GetRandomSnippet(difficulty Difficulty) CodeSnippet {
 		customSnippets, err := LoadCustomSnippets()
 		if err != nil || len(customSnippets) == 0 {
 			return CodeSnippet{
-				Content:    "# No custom snippets found\n# Create ~/.typing-snippets.json to add your own!\n# Example:\n# {\n#   \"snippets\": [\n#     {\"content\": \"your code here\", \"language\": \"Go\"}\n#   ]\n# }",
+				Content:    "# No custom snippets found\n# Create ~/.config/typing-trainer/snippets.json to add your own!\n# Example:\n# {\n#   \"snippets\": [\n#     {\"content\": \"your code here\", \"language\": \"Go\"}\n#   ]\n# }",
 				Language:   "Info",
 				Difficulty: Custom,
 			}

@@ -6,7 +6,10 @@ import (
 	"path/filepath"
 )
 
-const customSnippetsFileName = ".typing-snippets.json"
+const (
+	customSnippetsFileName    = "snippets.json"
+	oldCustomSnippetsFileName = ".typing-snippets.json"
+)
 
 type CustomSnippetFile struct {
 	Snippets []CustomSnippetEntry `json:"snippets"`
@@ -18,11 +21,19 @@ type CustomSnippetEntry struct {
 }
 
 func getCustomSnippetsPath() (string, error) {
-	home, err := os.UserHomeDir()
+	newPath, err := getConfigFile(customSnippetsFileName)
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, customSnippetsFileName), nil
+
+	// Try to migrate from old location
+	home, err := os.UserHomeDir()
+	if err == nil {
+		oldPath := filepath.Join(home, oldCustomSnippetsFileName)
+		migrateOldFile(oldPath, newPath)
+	}
+
+	return newPath, nil
 }
 
 func LoadCustomSnippets() ([]CodeSnippet, error) {

@@ -6,14 +6,25 @@ import (
 	"path/filepath"
 )
 
-const historyFileName = ".typing-history.json"
+const (
+	historyFileName    = "history.json"
+	oldHistoryFileName = ".typing-history.json"
+)
 
 func getHistoryPath() (string, error) {
-	home, err := os.UserHomeDir()
+	newPath, err := getConfigFile(historyFileName)
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, historyFileName), nil
+
+	// Try to migrate from old location
+	home, err := os.UserHomeDir()
+	if err == nil {
+		oldPath := filepath.Join(home, oldHistoryFileName)
+		migrateOldFile(oldPath, newPath)
+	}
+
+	return newPath, nil
 }
 
 func LoadHistory() (*SessionHistory, error) {
