@@ -1200,6 +1200,111 @@ def func(*args, **kwargs):
 			Difficulty: Brackets,
 		},
 	},
+	RegexPatterns: {
+		{
+			Content: `^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$
+^(?:https?://)?(?:www\.)?[a-z0-9-]+(?:\.[a-z]{2,}){1,3}(?:/[^\s?#]+)?/?$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b
+^\[(?:[a-f0-9]{1,4}:){7}[a-f0-9]{1,4}\]$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `^#[0-9a-fA-F]{6}$
+^(?:rgb|hsl)a?\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?(?:\s*,\s*(?:0?\.\d+|1\.0|1))?\s*\)$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^\w\s]).{12,64}$
+^(?!.*(\w)\1\1)[A-Za-z0-9_-]{8,32}$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `^(?<proto>https?)://(?<host>[^/:]+)(?::(?<port>\d{2,5}))?(?<path>/[^\s?#]*)?(?:\?(?<query>[^\s#]*))?(?:#(?<frag>\S+))?$
+^(?<year>\d{4})-(?<month>0[1-9]|1[0-2])-(?<day>0[1-9]|[12]\d|3[01])$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `^(?:\+1-?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}$
+^\$?\d{1,3}(?:,\d{3})*(?:\.\d{2})?$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `\[(?P<label>[^\]]+)\]\((?P<url>[^)]+)\)
+\*\*(?P<bold>[^*]+)\*\*|__(?P<underline>[^_]+)__`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `(?:^|\s)@[A-Za-z0-9_]{1,15}(?=\s|$)
+(?:^|\s)#[A-Za-z_][\w-]*`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `\b[A-Z]{2}\d{3}(?:-\d{3})?\b
+^(?:[A-Z]{2}\d{2}\s?){3}[A-Z]{2}$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `^(?:\.\./|\.?/)?(?:[\w.-]+/)*[\w.-]+\.(?:go|rs|py|js|ts|cpp|h)$
+^(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)?@(?:\d+\.\d+\.\d+|\*)$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `(?:--[a-z0-9-]+(?:=\S+)?|\-[a-zA-Z]+)
+(?:^|\s)(?:-I\s*[^\s]+|-D\w+=\w+|/Ox)(?=\s|$)`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s)?\d{2}\s[A-Z][a-z]{2}\s\d{4}\s\d{2}:\d{2}:\d{2}\sGMT$
+^([01]?\d|2[0-3]):[0-5]\d(:[0-5]\d)?(Z|[+-][01]\d:[0-5]\d)?$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `^\((?:[^)(]+|\((?1)\))*\)$
+^\[(?:[^[\]]+|\[(?1)\])*\]$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `(?<!\\)\$(\w+)
+\\\$(?:\{(?P<name>[A-Za-z_]\w*)\}|(?P<idx>\d+))`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `(?<=^|\s)version\s*=\s*["']?(?P<ver>\d+\.\d+\.\d+(?:-[\w.]+)?)["']?(?=\s|$)
+^\s*(?:[\w-]+\s*=\s*\".*?\\"\s*)+$`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+		{
+			Content: `(?x)
+^
+(?:[A-Za-z0-9!#$%&'*+/=?^_{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_{|}~-]+)*
+ |
+ \"(?:[^\"\\r\\n]|\\\\.)+\")
+@
+(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}
+$
+`,
+			Language:   "Regex",
+			Difficulty: RegexPatterns,
+		},
+	},
 }
 
 func GetRandomSnippet(difficulty Difficulty) CodeSnippet {

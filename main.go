@@ -18,7 +18,7 @@ const (
 	stateResults
 )
 
-var difficultyOptions = []Difficulty{Easy, Medium, Hard, Numbers, Symbols, HexNumbers, Brackets}
+var difficultyOptions = []Difficulty{Easy, Medium, Hard, Numbers, Symbols, HexNumbers, Brackets, RegexPatterns}
 
 func difficultyName(d Difficulty) string {
 	switch d {
@@ -36,6 +36,8 @@ func difficultyName(d Difficulty) string {
 		return "Symbols"
 	case Brackets:
 		return "Brackets"
+	case RegexPatterns:
+		return "Regex Patterns"
 	default:
 		return "Unknown"
 	}
