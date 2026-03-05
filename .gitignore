@@ -1,0 +1,27 @@
+# Binaries
+typing-trainer
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go
+*.test
+*.out
+go.work
+.gocache
+
+# Nix
+result
+.direnv
+
+# IDE
+.vscode/
+.idea/
+
+# Session data
+.typing-history.json
+
+# sidecar
+.todos
