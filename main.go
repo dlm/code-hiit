@@ -77,18 +77,18 @@ func (m *model) updateFilteredModes() {
 }
 
 type model struct {
-	state          state
-	difficulty     Difficulty
-	snippet        CodeSnippet
-	snippetIndex   int
-	typedText      string
-	currentPos     int
-	stats          TypingStats
-	history        *SessionHistory
-	menuCursor     int
-	searchInput    string
-	filteredModes  []Difficulty
-	err            error
+	state         state
+	difficulty    Difficulty
+	snippet       CodeSnippet
+	snippetIndex  int
+	typedText     string
+	currentPos    int
+	stats         TypingStats
+	history       *SessionHistory
+	menuCursor    int
+	searchInput   string
+	filteredModes []Difficulty
+	err           error
 }
 
 func initialModel() model {

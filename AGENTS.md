@@ -62,7 +62,7 @@ The goal is to help users improve typing skills for numbers, symbols, and code p
      --done "Created custom.go with LoadCustomSnippets() function. \
              Added Custom difficulty to types.go. Updated main.go menu. \
              Modified GetRandomSnippet, GetSnippet, GetNextSnippet functions. \
-             Created .typing-snippets.example.json. Tested functionality." \
+             Created snippets.example.json under XDG config. Tested functionality." \
      --remaining "None - feature complete and ready for review" \
      --uncertain "None - all functionality tested and working"
    ```

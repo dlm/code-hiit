@@ -1,6 +1,8 @@
 package main
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 var snippets = map[Difficulty][]CodeSnippet{
 	Easy: {
@@ -1311,8 +1313,12 @@ func GetRandomSnippet(difficulty Difficulty) CodeSnippet {
 	if difficulty == Custom {
 		customSnippets, err := LoadCustomSnippets()
 		if err != nil || len(customSnippets) == 0 {
+			displayPath := "~/.config/typing-trainer/snippets.json"
+			if path, pathErr := getCustomSnippetsPath(); pathErr == nil {
+				displayPath = path
+			}
 			return CodeSnippet{
-				Content:    "# No custom snippets found\n# Create ~/.config/typing-trainer/snippets.json to add your own!\n# Example:\n# {\n#   \"snippets\": [\n#     {\"content\": \"your code here\", \"language\": \"Go\"}\n#   ]\n# }",
+				Content:    "# No custom snippets found\n# Create " + displayPath + " to add your own!\n# Example:\n# {\n#   \"snippets\": [\n#     {\"content\": \"your code here\", \"language\": \"Go\"}\n#   ]\n# }",
 				Language:   "Info",
 				Difficulty: Custom,
 			}
