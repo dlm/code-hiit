@@ -126,11 +126,11 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
-	case "up", "k", "ctrl+p":
+	case "up", "ctrl+p":
 		if m.menuCursor > 0 {
 			m.menuCursor--
 		}
-	case "down", "j", "ctrl+n":
+	case "down", "ctrl+n":
 		if m.menuCursor < len(m.filteredModes)-1 {
 			m.menuCursor++
 		}
