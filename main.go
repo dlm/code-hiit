@@ -43,17 +43,50 @@ func difficultyName(d Difficulty) string {
 	}
 }
 
+func fuzzyMatch(query, target string) bool {
+	if query == "" {
+		return true
+	}
+	query = strings.ToLower(query)
+	target = strings.ToLower(target)
+
+	qi := 0
+	for _, tc := range target {
+		if qi < len(query) && rune(query[qi]) == tc {
+			qi++
+		}
+	}
+	return qi == len(query)
+}
+
+func (m *model) updateFilteredModes() {
+	m.filteredModes = []Difficulty{}
+	for _, diff := range difficultyOptions {
+		if fuzzyMatch(m.searchInput, difficultyName(diff)) {
+			m.filteredModes = append(m.filteredModes, diff)
+		}
+	}
+	if m.menuCursor >= len(m.filteredModes) {
+		m.menuCursor = len(m.filteredModes) - 1
+	}
+	if m.menuCursor < 0 {
+		m.menuCursor = 0
+	}
+}
+
 type model struct {
-	state        state
-	difficulty   Difficulty
-	snippet      CodeSnippet
-	snippetIndex int
-	typedText    string
-	currentPos   int
-	stats        TypingStats
-	history      *SessionHistory
-	menuCursor   int
-	err          error
+	state          state
+	difficulty     Difficulty
+	snippet        CodeSnippet
+	snippetIndex   int
+	typedText      string
+	currentPos     int
+	stats          TypingStats
+	history        *SessionHistory
+	menuCursor     int
+	searchInput    string
+	filteredModes  []Difficulty
+	err            error
 }
 
 func initialModel() model {
@@ -62,9 +95,11 @@ func initialModel() model {
 		history = &SessionHistory{Sessions: []Session{}}
 	}
 	return model{
-		state:      stateMenu,
-		menuCursor: 0,
-		history:    history,
+		state:         stateMenu,
+		menuCursor:    0,
+		history:       history,
+		searchInput:   "",
+		filteredModes: difficultyOptions,
 	}
 }
 
@@ -96,20 +131,42 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.menuCursor--
 		}
 	case "down", "j":
-		if m.menuCursor < len(difficultyOptions)-1 {
+		if m.menuCursor < len(m.filteredModes)-1 {
 			m.menuCursor++
 		}
 	case "enter":
-		m.difficulty = difficultyOptions[m.menuCursor]
-		m.snippet = GetRandomSnippet(m.difficulty)
-		m.snippetIndex = 0
-		m.typedText = ""
-		m.currentPos = 0
-		m.stats = TypingStats{
-			StartTime: time.Now(),
-			Errors:    []TypingError{},
+		if len(m.filteredModes) > 0 {
+			m.difficulty = m.filteredModes[m.menuCursor]
+			m.snippet = GetRandomSnippet(m.difficulty)
+			m.snippetIndex = 0
+			m.typedText = ""
+			m.currentPos = 0
+			m.stats = TypingStats{
+				StartTime: time.Now(),
+				Errors:    []TypingError{},
+			}
+			m.state = stateTyping
 		}
-		m.state = stateTyping
+	case "backspace":
+		if len(m.searchInput) > 0 {
+			m.searchInput = m.searchInput[:len(m.searchInput)-1]
+			m.updateFilteredModes()
+		}
+	case "esc":
+		if m.searchInput != "" {
+			m.searchInput = ""
+			m.menuCursor = 0
+			m.updateFilteredModes()
+		} else {
+			return m, tea.Quit
+		}
+	default:
+		key := msg.String()
+		if len(key) == 1 {
+			m.searchInput += key
+			m.menuCursor = 0
+			m.updateFilteredModes()
+		}
 	}
 	return m, nil
 }
@@ -294,22 +351,37 @@ func (m model) viewMenu() string {
 
 	b.WriteString(titleStyle.Render("Code Typing Trainer"))
 	b.WriteString("\n")
-	b.WriteString(subtitleStyle.Render("Select difficulty level:"))
+	b.WriteString(subtitleStyle.Render("Select mode:"))
 	b.WriteString("\n\n")
 
-	for i, diff := range difficultyOptions {
-		cursor := " "
-		if m.menuCursor == i {
-			cursor = ">"
-			b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %s", cursor, difficultyName(diff))))
-		} else {
-			b.WriteString(fmt.Sprintf(" %s %s", cursor, difficultyName(diff)))
-		}
+	// Show search input
+	searchPrompt := "> "
+	if m.searchInput == "" {
+		b.WriteString(subtitleStyle.Render(searchPrompt + "_"))
+	} else {
+		b.WriteString(subtitleStyle.Render(searchPrompt + m.searchInput + "_"))
+	}
+	b.WriteString("\n\n")
+
+	// Show filtered modes
+	if len(m.filteredModes) == 0 {
+		b.WriteString(subtitleStyle.Render("  No matches found"))
 		b.WriteString("\n")
+	} else {
+		for i, diff := range m.filteredModes {
+			cursor := " "
+			if m.menuCursor == i {
+				cursor = ">"
+				b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %s", cursor, difficultyName(diff))))
+			} else {
+				b.WriteString(fmt.Sprintf(" %s %s", cursor, difficultyName(diff)))
+			}
+			b.WriteString("\n")
+		}
 	}
 
 	b.WriteString("\n")
-	b.WriteString(subtitleStyle.Render("↑/↓: navigate • enter: select • q: quit"))
+	b.WriteString(subtitleStyle.Render("type to search • ↑/↓: navigate • enter: select • esc: clear/quit"))
 
 	return b.String()
 }
