@@ -11,6 +11,7 @@ const (
 	Numbers
 	Symbols
 	HexNumbers
+	Brackets
 )
 
 type CodeSnippet struct {

@@ -955,6 +955,251 @@ infinite = 0..;`,
 			Difficulty: Symbols,
 		},
 	},
+	Brackets: {
+		{
+			Content: `fn(a, b, c);
+obj.method(x, y);
+ptr->call(&arg);`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `arr[0] = vec[i];
+map["key"] = data[idx];
+grid[x][y] = val;`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `if (a && b) {
+    return (x > y) ? x : y;
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `list = [1, 2, 3];
+tuple = (a, b, c);
+set = {x, y, z};`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `lambda = (x, y) => x * y;
+arrow = () => {return 42;};
+func = |a, b| a + b;`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `type = Vec<T>;
+generic = HashMap<K, V>;
+bounds = Box<dyn Trait>;`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `expr = (a + b) * (c - d);
+calc = {[(x / y) % z]};
+nest = <<val>>;`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `arr = [[1, 2], [3, 4]];
+grid = {{"a", "b"}, {"c", "d"}};
+deep = [[[x]]];`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `match val {
+    Some(x) => process(x),
+    None => panic!("error"),
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `template<typename T>
+T max(T a, T b) {
+    return (a > b) ? a : b;
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `std::map<std::string, int> counts;
+for (const auto& item : items) {
+    counts[item]++;
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `let data = vec![1, 2, 3];
+let sum: i32 = data.iter()
+    .filter(|&&x| x % 2 == 0)
+    .sum();`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `auto lambda = [&](int x) -> int {
+    return (x * 3) & 0xFF;
+};`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `impl<T: Clone> Buffer<T> {
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, T::default());
+    }
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `std::vector<std::vector<int>> matrix = {
+    {1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9}
+};`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `map = {"k1": v1, "k2": v2};
+access = obj["prop"];
+slice = arr[1:5];`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `enum Color { Red = 0xFF0000 };
+flags = (a | b) & mask;
+check = (val & 0x80) != 0;`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `result = [(x, y) for x in range(10) if x % 2 == 0];
+dict = {k: v for k, v in items};`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `fn parse<'a>(buf: &'a [u8]) -> Result<&'a [u8], Error> {
+    let (rest, data) = take(4)(buf)?;
+    Ok((rest, data))
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `auto cmp = [](const auto& a, const auto& b) {
+    return a.priority > b.priority;
+};
+std::sort(items.begin(), items.end(), cmp);`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `macro_rules! vec {
+    ($($x:expr),*) => {
+        {
+            let mut v = Vec::new();
+            $(v.push($x);)*
+            v
+        }
+    };
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `template<class T>
+std::unique_ptr<T> create() {
+    return std::make_unique<T>();
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `closure = |x: i32, y: i32| -> i32 {
+    let sum = x + y;
+    (sum * sum) - (x ^ y)
+};`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `try {
+    throw Error("msg");
+} catch (e) {
+    log(e);
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `struct Point {
+    x: f32,
+    y: f32,
+}
+let p = Point { x: 1.0, y: 2.0 };`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `impl Iterator for Range {
+    type Item = i32;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.pos < self.end {
+            let val = self.pos;
+            self.pos += 1;
+            Some(val)
+        } else {
+            None
+        }
+    }
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `constexpr auto factorial(int n) -> int {
+    return (n <= 1) ? 1 : n * factorial(n - 1);
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `let decoder = |bytes: &[u8]| -> Result<(u32, &[u8]), _> {
+    let val = u32::from_le_bytes(bytes[..4].try_into()?);
+    Ok((val & 0xFFFFFF, &bytes[4..]))
+};`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `template<typename... Ts>
+constexpr auto sum(Ts&&... args) {
+    return (... + args);
+}`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+		{
+			Content: `@decorator
+def func(*args, **kwargs):
+    result = {k: v for k, v in zip(args, kwargs.values())}
+    return [process(x) for x in result.items()]`,
+			Language:   "Brackets",
+			Difficulty: Brackets,
+		},
+	},
 }
 
 func GetRandomSnippet(difficulty Difficulty) CodeSnippet {
