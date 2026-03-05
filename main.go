@@ -18,17 +18,38 @@ const (
 	stateResults
 )
 
+var difficultyOptions = []Difficulty{Easy, Medium, Hard, Numbers, Symbols, HexNumbers}
+
+func difficultyName(d Difficulty) string {
+	switch d {
+	case Easy:
+		return "Easy"
+	case Medium:
+		return "Medium"
+	case Hard:
+		return "Hard"
+	case Numbers:
+		return "Numbers"
+	case HexNumbers:
+		return "Hex Numbers"
+	case Symbols:
+		return "Symbols"
+	default:
+		return "Unknown"
+	}
+}
+
 type model struct {
-	state          state
-	difficulty     Difficulty
-	snippet        CodeSnippet
-	snippetIndex   int
-	typedText      string
-	currentPos     int
-	stats          TypingStats
-	history        *SessionHistory
-	menuCursor     int
-	err            error
+	state        state
+	difficulty   Difficulty
+	snippet      CodeSnippet
+	snippetIndex int
+	typedText    string
+	currentPos   int
+	stats        TypingStats
+	history      *SessionHistory
+	menuCursor   int
+	err          error
 }
 
 func initialModel() model {
@@ -71,11 +92,11 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.menuCursor--
 		}
 	case "down", "j":
-		if m.menuCursor < 4 {
+		if m.menuCursor < len(difficultyOptions)-1 {
 			m.menuCursor++
 		}
 	case "enter":
-		m.difficulty = Difficulty(m.menuCursor)
+		m.difficulty = difficultyOptions[m.menuCursor]
 		m.snippet = GetRandomSnippet(m.difficulty)
 		m.snippetIndex = 0
 		m.typedText = ""
@@ -272,14 +293,13 @@ func (m model) viewMenu() string {
 	b.WriteString(subtitleStyle.Render("Select difficulty level:"))
 	b.WriteString("\n\n")
 
-	difficulties := []string{"Easy", "Medium", "Hard", "Numbers", "Symbols"}
-	for i, diff := range difficulties {
+	for i, diff := range difficultyOptions {
 		cursor := " "
 		if m.menuCursor == i {
 			cursor = ">"
-			b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %s", cursor, diff)))
+			b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %s", cursor, difficultyName(diff))))
 		} else {
-			b.WriteString(fmt.Sprintf(" %s %s", cursor, diff))
+			b.WriteString(fmt.Sprintf(" %s %s", cursor, difficultyName(diff)))
 		}
 		b.WriteString("\n")
 	}
@@ -293,8 +313,7 @@ func (m model) viewMenu() string {
 func (m model) viewTyping() string {
 	var b strings.Builder
 
-	diffNames := []string{"Easy", "Medium", "Hard", "Numbers", "Symbols"}
-	header := fmt.Sprintf("%s - %s", diffNames[m.difficulty], m.snippet.Language)
+	header := fmt.Sprintf("%s - %s", difficultyName(m.difficulty), m.snippet.Language)
 	b.WriteString(titleStyle.Render(header))
 	b.WriteString("\n\n")
 

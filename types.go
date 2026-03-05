@@ -10,6 +10,7 @@ const (
 	Hard
 	Numbers
 	Symbols
+	HexNumbers
 )
 
 type CodeSnippet struct {
@@ -19,16 +20,16 @@ type CodeSnippet struct {
 }
 
 type TypingStats struct {
-	TotalChars        int
-	CorrectChars      int
-	IncorrectChars    int
-	TotalSymbols      int
-	CorrectSymbols    int
-	TotalNumbers      int
-	CorrectNumbers    int
-	StartTime         time.Time
-	EndTime           time.Time
-	Errors            []TypingError
+	TotalChars     int
+	CorrectChars   int
+	IncorrectChars int
+	TotalSymbols   int
+	CorrectSymbols int
+	TotalNumbers   int
+	CorrectNumbers int
+	StartTime      time.Time
+	EndTime        time.Time
+	Errors         []TypingError
 }
 
 type TypingError struct {

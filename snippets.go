@@ -638,6 +638,106 @@ elapsed = 123.456;`,
 			Difficulty: Numbers,
 		},
 	},
+	HexNumbers: {
+		{
+			Content: `let mask = 0xFF0A & 0x0F0F;
+let flag = 0xDEAD | 0xBEEF;
+let check = mask ^ flag;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `addr := 0x7FFF_F0A0;
+offset := addr + 0x20;
+page := offset & 0xFFFF_F000;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `let color = 0x1A2B3C;
+let alpha = 0xFF;
+let pixel = (color << 8) | alpha;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `const KEY: u32 = 0x9E37_79B1;
+state ^= KEY.wrapping_add(0x1337);
+state = state.rotate_left(5);`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `let bytes = [0xDE, 0xAD, 0xBE, 0xEF];
+let sum = bytes[0] as u16 + bytes[3] as u16;
+let carry = (sum & 0xFF00) >> 8;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `uint16_t header = 0x7F;
+header |= 0x20;
+footer = header ^ 0x5A;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `hash = (seed ^ 0x5A5A5A5A) + 0x1BADB002;
+mix = (hash << 7) ^ (hash >> 3);
+mask = mix & 0xFFFF;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `guid := 0xAABBCCDDu32;
+mask := guid & 0x00FF00FF;
+bits := (guid >> 8) & 0x00FF00FF;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `pc = 0x0040_1000;
+jump = pc + 0x20;
+stack = 0x7FFF_FFF0;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `let table = [0x0, 0x1, 0x8, 0xF];
+let idx = i & 0x3;
+let nibble = table[idx];`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `crc := 0xFFFF;
+crc ^= 0x00FF;
+crc = (crc << 4) | (crc >> 12);`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `value = 0xABC ^ 0x123;
+swap = (value << 8) | (value >> 8);
+mask = swap & 0x0FFF;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `salt := 0x6C696769;
+token := salt ^ 0x41414141;
+tag := token & 0xFFFF0000;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+		{
+			Content: `addr_low := 0x0010;
+addr_high := 0xFF00;
+pointer := addr_high | addr_low;`,
+			Language:   "Hex Numbers",
+			Difficulty: HexNumbers,
+		},
+	},
 	Symbols: {
 		{
 			Content: `arr[0] = {x: 1, y: 2};
