@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -19,6 +20,10 @@ const (
 )
 
 var modeOptions = []Mode{EasyCode, MediumCode, HardCode, NumbersPractice, SymbolsPractice, HexNumbers, BracketsPractice, RegexPatterns, Custom}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func modeName(m Mode) string {
 	switch m {
