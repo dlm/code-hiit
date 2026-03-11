@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code HIIT Lab — Intervals for coders</title>
+  <link rel="icon" type="image/svg+xml" href="assets/code-hiit-favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00e8a9;
+      --heat: #ff5e5b;
+      --base: #0c111b;
+      --graphite: #141927;
+      --slate: #1f2535;
+      --light: #e9edf5;
+      --muted: #a8b3c6;
+      --border: #2c3346;
+      --success: #39c07f;
+      --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      --font-body: 'Manrope', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+      --shadow-soft: 0 20px 70px rgba(0, 0, 0, 0.45);
+      --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--base);
+      color: var(--light);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      scroll-behavior: smooth;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(90deg, rgba(12, 17, 27, 0.9), rgba(31, 37, 53, 0.9));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 1.05rem;
+    }
+
+    .brand img {
+      height: 32px;
+      width: 32px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .nav-links a:hover { color: var(--primary); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--base);
+      box-shadow: 0 10px 30px rgba(0, 232, 169, 0.25);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0, 232, 169, 0.35); }
+    .btn-primary:active { transform: translateY(0); box-shadow: 0 8px 24px rgba(0, 232, 169, 0.2); }
+
+    .btn-ghost {
+      border-color: var(--border);
+      color: var(--light);
+      background: transparent;
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+    main {
+      overflow: hidden;
+    }
+
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 22px;
+    }
+
+    .hero {
+      position: relative;
+      padding: 90px 22px 80px;
+      background: linear-gradient(135deg, #0c111b 0%, #11182a 40%, #14253d 100%);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 25% 20%, rgba(0, 232, 169, 0.16), transparent 40%),
+                  radial-gradient(circle at 80% 10%, rgba(255, 94, 91, 0.16), transparent 35%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 48px;
+      align-items: center;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      z-index: 1;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      letter-spacing: -0.02em;
+      margin: 0;
+      color: var(--light);
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 4vw, 3.1rem);
+      line-height: 1.05;
+    }
+
+    .lede {
+      margin: 16px 0 28px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 540px;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: var(--slate);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chip .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--primary);
+      display: inline-block;
+    }
+
+    .terminal {
+      background: var(--graphite);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .terminal::before {
+      content: '';
+      position: absolute;
+      inset: 12px 12px auto auto;
+      width: 10px;
+      height: 10px;
+      background: var(--heat);
+      border-radius: 999px;
+      box-shadow: 14px 0 0 var(--muted), 28px 0 0 var(--primary);
+      opacity: 0.85;
+    }
+
+    .terminal pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      color: var(--light);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .pill-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 232, 169, 0.12);
+      color: var(--light);
+      border: 1px solid rgba(0, 232, 169, 0.4);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+    }
+
+    .section-title {
+      margin-bottom: 18px;
+      font-size: clamp(1.6rem, 3vw, 2rem);
+    }
+
+    .section-sub {
+      color: var(--muted);
+      margin-bottom: 28px;
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--graphite);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 20px;
+      position: relative;
+      box-shadow: var(--shadow-card);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 14px 14px 0 0;
+      opacity: 0.85;
+    }
+
+    .card h3 {
+      margin: 6px 0 10px;
+      font-size: 1.05rem;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+
+    .icon-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: rgba(0, 232, 169, 0.12);
+      border: 1px solid rgba(0, 232, 169, 0.4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--primary);
+    }
+
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .mode {
+      padding: 12px 14px;
+      background: var(--slate);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--light);
+      font-family: var(--font-mono);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mode span { color: var(--muted); font-family: var(--font-body); font-size: 0.95rem; }
+
+    .install-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .step {
+      background: var(--graphite);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 16px 18px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .step h4 {
+      margin: 6px 0 12px;
+      font-size: 1rem;
+    }
+
+    code, pre code {
+      font-family: var(--font-mono);
+      background: rgba(31, 37, 53, 0.6);
+      border: 1px solid var(--border);
+      color: var(--light);
+      padding: 10px 12px;
+      border-radius: 10px;
+      display: block;
+      font-size: 0.93rem;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    code.inline {
+      display: inline-block;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .brand-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .swatch {
+      width: 60px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+    }
+
+    footer {
+      padding: 36px 22px 50px;
+      background: var(--base);
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+    }
+
+    .footer-links { display: flex; gap: 14px; }
+    .footer-links a:hover { color: var(--primary); }
+
+    @media (max-width: 640px) {
+      .nav { padding: 12px 16px; }
+      .section { padding: 64px 18px; }
+      .hero { padding: 80px 18px 72px; }
+      .cta-row { flex-direction: column; align-items: flex-start; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav">
+      <a class="brand" href="#top">
+        <img src="assets/code-hiit-mark.svg" alt="Code HIIT Lab mark">
+        Code HIIT Lab
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#modes">Modes</a>
+        <a href="#install">Install</a>
+        <a href="#progress">Progress</a>
+      </div>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#install">Run code-hiit</a>
+        <a class="btn btn-ghost" href="https://github.com/your-org/code-hiit" target="_blank" rel="noreferrer">View on GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="pill-note">Intervals for coders • code-hiit</div>
+          <h1>Short bursts, sharper keystrokes.</h1>
+          <p class="lede">Code HIIT Lab is a high-intensity typing studio for developers. Smash through quick intervals that drill symbols, numbers, and real code patterns — all from the terminal with <code class="inline">code-hiit</code>.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#install">Start an interval</a>
+            <a class="btn btn-ghost" href="#features">See the workout</a>
+          </div>
+          <div class="chip-row">
+            <div class="chip"><span class="dot"></span> Work: 30s</div>
+            <div class="chip"><span class="dot"></span> Recovery: 15s</div>
+            <div class="chip"><span class="dot"></span> Symbols, Brackets, Numbers</div>
+            <div class="chip"><span class="dot"></span> History & stats</div>
+          </div>
+        </div>
+        <div>
+          <div class="terminal">
+            <pre><code>$ code-hiit
+Warmup   20s  ▓▓▓▓░░░░░░░░░░░░░
+Work     30s  ▓▓▓▓▓▓▓▓▓▓▓░░░░░░  symbols
+Recovery 15s  ▓▓▓▓▓▓░░░░░░░░░░░
+
+Snippet:
+for _, ch := range input {
+    if strings.ContainsRune(target, ch) {
+        hits++
+    }
+}
+
+WPM   82    Accuracy 96%    Reps 12
+History saved · Ready for next set</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <h2 class="section-title">Built like a workout</h2>
+      <p class="section-sub">Intervals, recovery, and focused drills for the characters that trip up coders most. Pick a mode, hit start, and let the timer run while you track WPM and accuracy.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="icon-circle">⏱</div>
+          <h3>HIIT cadence</h3>
+          <p>Short, intense work sets with recoveries. Reset your rhythm and keep accuracy tight as speed climbs.</p>
+        </div>
+        <div class="card">
+          <div class="icon-circle">{ }</div>
+          <h3>Code-native drills</h3>
+          <p>Symbols, brackets, numbers, regex, and real snippets tuned for muscle memory on the tricky stuff.</p>
+        </div>
+        <div class="card">
+          <div class="icon-circle">★</div>
+          <h3>Stats that stick</h3>
+          <p>History saved automatically. Track WPM, accuracy, and see how today’s intervals compare to your last session.</p>
+        </div>
+        <div class="card">
+          <div class="icon-circle">⚡</div>
+          <h3>Fast to launch</h3>
+          <p>One command to start: <code class="inline">code-hiit</code>. Minimal setup, instant reps.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="modes">
+      <h2 class="section-title">Modes that target weak spots</h2>
+      <p class="section-sub">Swap modes like sets in a gym. Go heavy on braces, sprint numbers, or hit custom snippets that match your stack.</p>
+      <div class="modes-grid">
+        <div class="mode"><strong>Easy Code</strong><span>warmup</span></div>
+        <div class="mode"><strong>Medium Code</strong><span>flow</span></div>
+        <div class="mode"><strong>Hard Code</strong><span>max effort</span></div>
+        <div class="mode"><strong>Numbers</strong><span>data reps</span></div>
+        <div class="mode"><strong>Symbols</strong><span>operators</span></div>
+        <div class="mode"><strong>Hex</strong><span>0x fuel</span></div>
+        <div class="mode"><strong>Brackets</strong><span>brace form</span></div>
+        <div class="mode"><strong>Regex</strong><span>pattern sprint</span></div>
+        <div class="mode"><strong>Custom</strong><span>your stack</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="install">
+      <h2 class="section-title">Run code-hiit</h2>
+      <p class="section-sub">No fuss. Build the CLI, start an interval, and let history track your progress.</p>
+      <div class="install-steps">
+        <div class="step">
+          <h4>1) Build</h4>
+          <code>go build -o code-hiit</code>
+        </div>
+        <div class="step">
+          <h4>2) Launch a session</h4>
+          <code>./code-hiit</code>
+          <p class="section-sub" style="margin-top:10px;margin-bottom:0;">Pick a mode, choose an interval, and start typing.</p>
+        </div>
+        <div class="step">
+          <h4>3) Track progress</h4>
+          <code>~/.config/code-hiit/history.json</code>
+          <p class="section-sub" style="margin-top:10px;margin-bottom:0;">History saves automatically so you can see every set.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="progress">
+      <h2 class="section-title">Made to keep you coming back</h2>
+      <p class="section-sub">Clear feedback, quick resets, and a flow that feels like a session — not a spreadsheet.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="icon-circle">📈</div>
+          <h3>Session history</h3>
+          <p>Track intervals over time and see trends as you tighten accuracy and speed.</p>
+        </div>
+        <div class="card">
+          <div class="icon-circle">🎯</div>
+          <h3>Hit the weak links</h3>
+          <p>Target symbols and patterns that actually show up in your codebase, not typing tests.</p>
+        </div>
+        <div class="card">
+          <div class="icon-circle">🧠</div>
+          <h3>Stay in flow</h3>
+          <p>Minimal UI, crisp typography, and a rhythm that keeps you focused on the reps.</p>
+        </div>
+      </div>
+
+      <div class="brand-bar">
+        <div class="swatch" style="background:#00e8a9;"></div>
+        <div class="swatch" style="background:#ff5e5b;"></div>
+        <div class="swatch" style="background:#141927;"></div>
+        <div class="swatch" style="background:#1f2535;"></div>
+        <span class="pill-note">Fonts: Space Grotesk · Manrope · JetBrains Mono</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>Code HIIT Lab — Intervals for coders.</div>
+      <div class="footer-links">
+        <a href="https://github.com/your-org/code-hiit" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="#install">Start a set</a>
+        <a href="#top">Back to top</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

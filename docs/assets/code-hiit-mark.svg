@@ -1,0 +1,9 @@
+<svg width="256" height="256" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Code HIIT Lab mark</title>
+  <rect x="8" y="8" width="48" height="48" rx="12" fill="#0C111B" stroke="#2C3346" stroke-width="2"/>
+  <rect x="16" y="17" width="8" height="30" rx="3" fill="#00E8A9"/>
+  <rect x="28" y="12" width="8" height="35" rx="3" fill="#FF5E5B"/>
+  <rect x="40" y="21" width="8" height="26" rx="3" fill="#00E8A9"/>
+  <rect x="16" y="13" width="32" height="2" rx="1" fill="#00E8A9"/>
+  <rect x="16" y="48" width="32" height="2" rx="1" fill="#2C3346"/>
+</svg>
