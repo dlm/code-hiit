@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 )
 
-// getConfigDir returns the typing-trainer config directory following XDG spec.
-// Defaults to ~/.config/typing-trainer
+// getConfigDir returns the code-hiit config directory following XDG spec.
+// Defaults to ~/.config/code-hiit
 func getConfigDir() (string, error) {
 	configHome := os.Getenv("XDG_CONFIG_HOME")
 	if configHome == "" {
@@ -17,7 +17,7 @@ func getConfigDir() (string, error) {
 		configHome = filepath.Join(home, ".config")
 	}
 
-	configDir := filepath.Join(configHome, "typing-trainer")
+	configDir := filepath.Join(configHome, "code-hiit")
 
 	// Create directory if it doesn't exist
 	if err := os.MkdirAll(configDir, 0755); err != nil {

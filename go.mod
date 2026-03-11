@@ -1,4 +1,4 @@
-module typing-trainer
+module code-hiit
 
 go 1.25.7
 
