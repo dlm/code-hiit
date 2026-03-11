@@ -30,8 +30,8 @@ The goal is to help users improve typing skills for numbers, symbols, and code p
    ```
 
 3. **During development:**
-   - Build: `go build -o typing-trainer`
-   - Test: `./typing-trainer`
+   - Build: `go build -o code-hiit`
+   - Test: `./code-hiit`
    - Main files:
      - `types.go` - Data structures and difficulty levels
      - `snippets.go` - Code snippet library
