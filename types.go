@@ -298,6 +298,13 @@ func isNumber(r rune) bool {
 	return r >= '0' && r <= '9'
 }
 
+// RecoveryQuote represents a quote used during recovery phase
+type RecoveryQuote struct {
+	Content  string `json:"content"`
+	Author   string `json:"author"`
+	Category string `json:"category"` // "motivational", "educational", "meditative"
+}
+
 // WorkoutState represents the current state during a HIIT workout
 type WorkoutState struct {
 	Workout             *HIITWorkout
@@ -310,6 +317,7 @@ type WorkoutState struct {
 	TypedText           string
 	CurrentPos          int
 	CurrentStats        TypingStats
+	RecoveryQuote       RecoveryQuote // Quote selected for this workout (same for all recovery phases)
 	Paused              bool
 	PausedAt            time.Time
 	PhasePausedDuration time.Duration

@@ -1,0 +1,19 @@
+{
+  "quotes": [
+    {
+      "content": "Ship early and learn with every release.",
+      "author": "Your Team",
+      "category": "motivational"
+    },
+    {
+      "content": "Comments should explain intent, not repeat the code.",
+      "author": "Your Mentor",
+      "category": "educational"
+    },
+    {
+      "content": "Focus on the fundamentals until they feel effortless.",
+      "author": "Anonymous",
+      "category": "meditative"
+    }
+  ]
+}
