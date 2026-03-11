@@ -628,16 +628,25 @@ func (m model) updateResults(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c", "q":
 		return m, tea.Quit
 	case "enter", "r":
-		m.snippet = GetRandomSnippet(m.mode)
-		m.typedText = ""
-		m.currentPos = 0
-		m.stats = TypingStats{
-			StartTime: time.Now(),
-			Errors:    []TypingError{},
+		// Only allow retry in freeform mode
+		if !m.isHIITMode {
+			m.snippet = GetRandomSnippet(m.mode)
+			m.typedText = ""
+			m.currentPos = 0
+			m.stats = TypingStats{
+				StartTime: time.Now(),
+				Errors:    []TypingError{},
+			}
+			m.state = stateTyping
 		}
-		m.state = stateTyping
+		// In HIIT mode, r/enter does nothing
 	case "m":
 		m.state = stateMainMenu
+		// Reset HIIT mode when returning to menu
+		if m.isHIITMode {
+			m.isHIITMode = false
+			m.workoutState = nil
+		}
 	}
 	return m, nil
 }
@@ -1027,7 +1036,130 @@ func (m model) viewTyping() string {
 	return b.String()
 }
 
+func workoutTypeName(wt WorkoutType) string {
+	switch wt {
+	case QuickWorkout:
+		return "Quick Workout"
+	case StandardWorkout:
+		return "Standard Workout"
+	case ExtendedWorkout:
+		return "Extended Workout"
+	default:
+		return "Workout"
+	}
+}
+
+func formatDuration(d time.Duration) string {
+	mins := int(d.Minutes())
+	secs := int(d.Seconds()) % 60
+	return fmt.Sprintf("%dm %ds", mins, secs)
+}
+
+func renderSetSummary(setNum int, set SetStats) string {
+	var b strings.Builder
+
+	// Set header
+	b.WriteString(fmt.Sprintf("Set %d\n", setNum))
+
+	// Warmup phase
+	if set.Warmup.Completed {
+		b.WriteString(warmupStyle.Render("  Warmup:   "))
+		b.WriteString(fmt.Sprintf("%.1f WPM | %.1f%% acc\n",
+			set.Warmup.Stats.WPM(), set.Warmup.Stats.Accuracy()))
+	}
+
+	// Work phase
+	if set.Work.Completed {
+		b.WriteString(workStyle.Render("  Work:     "))
+		b.WriteString(fmt.Sprintf("%.1f WPM | %.1f%% acc\n",
+			set.Work.Stats.WPM(), set.Work.Stats.Accuracy()))
+	}
+
+	// Recovery phase
+	if set.Recovery.Completed {
+		b.WriteString(recoveryStyle.Render("  Recovery: "))
+		b.WriteString(fmt.Sprintf("%.1f WPM | %.1f%% acc\n",
+			set.Recovery.Stats.WPM(), set.Recovery.Stats.Accuracy()))
+	}
+
+	return b.String()
+}
+
+func renderPhaseAverages(workout *HIITWorkout) string {
+	var b strings.Builder
+
+	b.WriteString("Phase Averages:\n")
+
+	// Warmup average
+	avgWarmupWPM := workout.AverageWPM(WarmupPhase)
+	avgWarmupAcc := workout.AverageAccuracy(WarmupPhase)
+	if avgWarmupWPM > 0 {
+		b.WriteString(warmupStyle.Render("  Warmup:   "))
+		b.WriteString(fmt.Sprintf("%.1f WPM | %.1f%% accuracy\n", avgWarmupWPM, avgWarmupAcc))
+	}
+
+	// Work average
+	avgWorkWPM := workout.AverageWPM(WorkPhase)
+	avgWorkAcc := workout.AverageAccuracy(WorkPhase)
+	if avgWorkWPM > 0 {
+		b.WriteString(workStyle.Render("  Work:     "))
+		b.WriteString(fmt.Sprintf("%.1f WPM | %.1f%% accuracy\n", avgWorkWPM, avgWorkAcc))
+	}
+
+	// Recovery average
+	avgRecoveryWPM := workout.AverageWPM(RecoveryPhase)
+	avgRecoveryAcc := workout.AverageAccuracy(RecoveryPhase)
+	if avgRecoveryWPM > 0 {
+		b.WriteString(recoveryStyle.Render("  Recovery: "))
+		b.WriteString(fmt.Sprintf("%.1f WPM | %.1f%% accuracy\n", avgRecoveryWPM, avgRecoveryAcc))
+	}
+
+	return b.String()
+}
+
+func (m model) viewHIITResults() string {
+	var b strings.Builder
+	workout := m.workoutState.Workout
+
+	// Header with celebration
+	b.WriteString(titleStyle.Render("WORKOUT COMPLETE!"))
+	b.WriteString("\n\n")
+
+	// Metadata: type, mode, duration, sets completed
+	duration := workout.EndTime.Sub(workout.StartTime)
+	b.WriteString(fmt.Sprintf("%s - %s\n", workoutTypeName(workout.WorkoutType), modeName(workout.FocusMode)))
+	b.WriteString(subtitleStyle.Render(fmt.Sprintf("Duration: %s | %d/%d sets completed",
+		formatDuration(duration), workout.CompletedSets(), workout.TotalSets)))
+	b.WriteString("\n\n")
+
+	// Per-set breakdown
+	b.WriteString(titleStyle.Render("SET BREAKDOWN"))
+	b.WriteString("\n\n")
+	for i, set := range workout.Sets {
+		b.WriteString(renderSetSummary(i+1, set))
+		b.WriteString("\n")
+	}
+
+	// Overall averages
+	b.WriteString("\n")
+	b.WriteString(titleStyle.Render("OVERALL PERFORMANCE"))
+	b.WriteString("\n\n")
+	b.WriteString(renderPhaseAverages(workout))
+
+	// Navigation
+	b.WriteString("\n\n")
+	b.WriteString(subtitleStyle.Render("m: main menu • q: quit"))
+
+	return b.String()
+}
+
 func (m model) viewResults() string {
+	// Check if HIIT mode
+	if m.isHIITMode && m.workoutState != nil {
+		return m.viewHIITResults()
+	}
+
+	// Freeform mode results
 	var b strings.Builder
 
 	b.WriteString(titleStyle.Render("Results"))
