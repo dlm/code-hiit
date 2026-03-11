@@ -181,6 +181,13 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 
 		// Check if workout is complete
 		if ws.CurrentSet >= ws.Workout.TotalSets {
+			// Persist the final recovery stats before finishing
+			setIndex := ws.CurrentSet - 1
+			for len(ws.Workout.Sets) <= setIndex {
+				ws.Workout.Sets = append(ws.Workout.Sets, NewSetStats(setIndex+1))
+			}
+			ws.Workout.Sets[setIndex].Recovery = currentPhaseStats
+
 			m.completeHIITWorkout()
 			return m, nil
 		}
@@ -194,7 +201,7 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 		// Find or create the set stats for the current set
 		setIndex := ws.CurrentSet - 1
 		for len(ws.Workout.Sets) <= setIndex {
-			ws.Workout.Sets = append(ws.Workout.Sets, SetStats{})
+			ws.Workout.Sets = append(ws.Workout.Sets, NewSetStats(len(ws.Workout.Sets)+1))
 		}
 
 		// Add phase stats to appropriate field in set
@@ -210,7 +217,7 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 		// Save phase stats to current set
 		setIndex := ws.CurrentSet
 		for len(ws.Workout.Sets) <= setIndex {
-			ws.Workout.Sets = append(ws.Workout.Sets, SetStats{})
+			ws.Workout.Sets = append(ws.Workout.Sets, NewSetStats(len(ws.Workout.Sets)+1))
 		}
 
 		switch currentPhaseStats.Phase {
