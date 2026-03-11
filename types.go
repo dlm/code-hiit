@@ -19,6 +19,76 @@ const (
 	Custom
 )
 
+// WorkoutType represents predefined HIIT workout configurations
+type WorkoutType int
+
+const (
+	QuickWorkout    WorkoutType = iota // 3 sets
+	StandardWorkout                    // 5 sets
+	ExtendedWorkout                    // 8 sets
+)
+
+func (wt WorkoutType) Sets() int {
+	switch wt {
+	case QuickWorkout:
+		return 3
+	case StandardWorkout:
+		return 5
+	case ExtendedWorkout:
+		return 8
+	default:
+		return 0
+	}
+}
+
+func (wt WorkoutType) String() string {
+	switch wt {
+	case QuickWorkout:
+		return "Quick (3 sets)"
+	case StandardWorkout:
+		return "Standard (5 sets)"
+	case ExtendedWorkout:
+		return "Extended (8 sets)"
+	default:
+		return "Unknown"
+	}
+}
+
+// WorkoutPhase represents the three phases of a HIIT set
+type WorkoutPhase int
+
+const (
+	WarmupPhase WorkoutPhase = iota
+	WorkPhase
+	RecoveryPhase
+)
+
+func (wp WorkoutPhase) String() string {
+	switch wp {
+	case WarmupPhase:
+		return "Warmup"
+	case WorkPhase:
+		return "Work"
+	case RecoveryPhase:
+		return "Recovery"
+	default:
+		return "Unknown"
+	}
+}
+
+func (wp WorkoutPhase) Duration() int {
+	switch wp {
+	case WarmupPhase:
+		return 15 // seconds
+	case WorkPhase:
+		return 20 // seconds
+	case RecoveryPhase:
+		return 10 // seconds
+	default:
+		return 0
+	}
+}
+
 type CodeSnippet struct {
 	Content  string `json:"content"`
 	Language string `json:"language"`
@@ -77,8 +147,103 @@ func (ts *TypingStats) NumberAccuracy() float64 {
 	return float64(ts.CorrectNumbers) / float64(ts.TotalNumbers) * 100
 }
 
+// PhaseStats tracks statistics for a single HIIT phase (warmup/work/recovery)
+type PhaseStats struct {
+	Phase        WorkoutPhase `json:"phase"`
+	Stats        TypingStats  `json:"stats"`
+	Completed    bool         `json:"completed"`
+	SkippedEarly bool         `json:"skipped_early"`
+}
+
+// SetStats tracks statistics for one complete HIIT set (all 3 phases)
+type SetStats struct {
+	SetNumber int        `json:"set_number"`
+	Warmup    PhaseStats `json:"warmup"`
+	Work      PhaseStats `json:"work"`
+	Recovery  PhaseStats `json:"recovery"`
+}
+
+func NewSetStats(setNumber int) SetStats {
+	return SetStats{
+		SetNumber: setNumber,
+		Warmup:    PhaseStats{Phase: WarmupPhase},
+		Work:      PhaseStats{Phase: WorkPhase},
+		Recovery:  PhaseStats{Phase: RecoveryPhase},
+	}
+}
+
+// HIITWorkout represents a complete HIIT workout session
+type HIITWorkout struct {
+	WorkoutType WorkoutType `json:"workout_type"`
+	FocusMode   Mode        `json:"focus_mode"` // Mode used for work phase
+	Sets        []SetStats  `json:"sets"`
+	StartTime   time.Time   `json:"start_time"`
+	EndTime     time.Time   `json:"end_time"`
+	Completed   bool        `json:"completed"`
+	TotalSets   int         `json:"total_sets"`
+}
+
+func (hw *HIITWorkout) CompletedSets() int {
+	count := 0
+	for _, set := range hw.Sets {
+		if set.Warmup.Completed && set.Work.Completed && set.Recovery.Completed {
+			count++
+		}
+	}
+	return count
+}
+
+func (hw *HIITWorkout) AverageWPM(phase WorkoutPhase) float64 {
+	total := 0.0
+	count := 0
+	for _, set := range hw.Sets {
+		var stats *PhaseStats
+		switch phase {
+		case WarmupPhase:
+			stats = &set.Warmup
+		case WorkPhase:
+			stats = &set.Work
+		case RecoveryPhase:
+			stats = &set.Recovery
+		}
+		if stats != nil && stats.Completed {
+			total += stats.Stats.WPM()
+			count++
+		}
+	}
+	if count == 0 {
+		return 0
+	}
+	return total / float64(count)
+}
+
+func (hw *HIITWorkout) AverageAccuracy(phase WorkoutPhase) float64 {
+	total := 0.0
+	count := 0
+	for _, set := range hw.Sets {
+		var stats *PhaseStats
+		switch phase {
+		case WarmupPhase:
+			stats = &set.Warmup
+		case WorkPhase:
+			stats = &set.Work
+		case RecoveryPhase:
+			stats = &set.Recovery
+		}
+		if stats != nil && stats.Completed {
+			total += stats.Stats.Accuracy()
+			count++
+		}
+	}
+	if count == 0 {
+		return 0
+	}
+	return total / float64(count)
+}
+
 type SessionHistory struct {
-	Sessions []Session `json:"sessions"`
+	Sessions     []Session     `json:"sessions"`
+	HIITWorkouts []HIITWorkout `json:"hiit_workouts"`
 }
 
 type Session struct {
@@ -131,4 +296,91 @@ func isSymbol(r rune) bool {
 
 func isNumber(r rune) bool {
 	return r >= '0' && r <= '9'
+}
+
+// WorkoutState represents the current state during a HIIT workout
+type WorkoutState struct {
+	Workout             *HIITWorkout
+	CurrentSet          int
+	CurrentPhase        WorkoutPhase
+	PhaseStartTime      time.Time
+	PhaseEndTime        time.Time
+	CurrentSnippet      CodeSnippet
+	SnippetIndex        int
+	TypedText           string
+	CurrentPos          int
+	CurrentStats        TypingStats
+	Paused              bool
+	PausedAt            time.Time
+	PhasePausedDuration time.Duration
+}
+
+func (ws *WorkoutState) StartPhase(phase WorkoutPhase, startTime time.Time) {
+	ws.CurrentPhase = phase
+	ws.PhaseStartTime = startTime
+	ws.PhaseEndTime = time.Time{}
+	ws.Paused = false
+	ws.PausedAt = time.Time{}
+	ws.PhasePausedDuration = 0
+}
+
+func (ws *WorkoutState) phasePausedDuration() time.Duration {
+	total := ws.PhasePausedDuration
+	if ws.Paused && !ws.PausedAt.IsZero() {
+		total += time.Since(ws.PausedAt)
+	}
+	if total < 0 {
+		return 0
+	}
+	return total
+}
+
+// RemainingTime returns seconds remaining in current phase
+func (ws *WorkoutState) RemainingTime() int {
+	phaseDuration := time.Duration(ws.CurrentPhase.Duration()) * time.Second
+	if phaseDuration <= 0 || ws.PhaseStartTime.IsZero() {
+		return 0
+	}
+
+	elapsed := time.Since(ws.PhaseStartTime) - ws.phasePausedDuration()
+	if elapsed < 0 {
+		elapsed = 0
+	}
+
+	remaining := phaseDuration - elapsed
+	if remaining <= 0 {
+		return 0
+	}
+	return int((remaining + time.Second - 1) / time.Second)
+}
+
+// ElapsedTime returns seconds elapsed in current phase
+func (ws *WorkoutState) ElapsedTime() int {
+	if ws.PhaseStartTime.IsZero() {
+		return 0
+	}
+
+	elapsed := time.Since(ws.PhaseStartTime) - ws.phasePausedDuration()
+	if elapsed < 0 {
+		return 0
+	}
+
+	return int(elapsed.Seconds())
+}
+
+// Progress returns 0.0 to 1.0 representing phase completion
+func (ws *WorkoutState) Progress() float64 {
+	duration := float64(ws.CurrentPhase.Duration())
+	if duration == 0 {
+		return 1.0
+	}
+	elapsed := float64(ws.ElapsedTime())
+	progress := elapsed / duration
+	if progress > 1.0 {
+		return 1.0
+	}
+	if progress < 0 {
+		return 0
+	}
+	return progress
 }
