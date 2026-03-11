@@ -19,6 +19,14 @@ const (
 	stateResults
 )
 
+type tickMsg time.Time
+
+func tickCmd() tea.Cmd {
+	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
+		return tickMsg(t)
+	})
+}
+
 var modeOptions = []Mode{EasyCode, MediumCode, HardCode, NumbersPractice, SymbolsPractice, HexNumbers, BracketsPractice, RegexPatterns, Custom}
 
 func init() {
@@ -94,6 +102,9 @@ type model struct {
 	searchInput   string
 	filteredModes []Mode
 	err           error
+	// HIIT workout mode
+	workoutState *WorkoutState
+	isHIITMode   bool
 }
 
 func initialModel() model {
@@ -111,6 +122,9 @@ func initialModel() model {
 }
 
 func (m model) Init() tea.Cmd {
+	if m.isHIITMode && m.workoutState != nil {
+		return tickCmd()
+	}
 	return nil
 }
 
@@ -125,8 +139,123 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case stateResults:
 			return m.updateResults(msg)
 		}
+	case tickMsg:
+		if m.isHIITMode && m.workoutState != nil && !m.workoutState.Paused {
+			if m.workoutState.RemainingTime() <= 0 {
+				return m.transitionPhase()
+			}
+		}
+		if m.isHIITMode {
+			return m, tickCmd()
+		}
 	}
 	return m, nil
+}
+
+func (m model) transitionPhase() (tea.Model, tea.Cmd) {
+	ws := m.workoutState
+
+	// Finalize current phase stats
+	m.stats.EndTime = time.Now()
+
+	// Save current phase stats
+	currentPhaseStats := PhaseStats{
+		Phase:     ws.CurrentPhase,
+		Stats:     m.stats,
+		Completed: true,
+	}
+
+	// Determine next phase
+	var nextPhase WorkoutPhase
+	var shouldSaveSet bool
+
+	switch ws.CurrentPhase {
+	case WarmupPhase:
+		nextPhase = WorkPhase
+	case WorkPhase:
+		nextPhase = RecoveryPhase
+	case RecoveryPhase:
+		// Complete current set
+		shouldSaveSet = true
+		ws.CurrentSet++
+
+		// Check if workout is complete
+		if ws.CurrentSet >= ws.Workout.TotalSets {
+			m.completeHIITWorkout()
+			return m, nil
+		}
+
+		// Start next set with warmup
+		nextPhase = WarmupPhase
+	}
+
+	// Save the set if recovery just completed
+	if shouldSaveSet {
+		// Find or create the set stats for the current set
+		setIndex := ws.CurrentSet - 1
+		for len(ws.Workout.Sets) <= setIndex {
+			ws.Workout.Sets = append(ws.Workout.Sets, SetStats{})
+		}
+
+		// Add phase stats to appropriate field in set
+		switch currentPhaseStats.Phase {
+		case WarmupPhase:
+			ws.Workout.Sets[setIndex].Warmup = currentPhaseStats
+		case WorkPhase:
+			ws.Workout.Sets[setIndex].Work = currentPhaseStats
+		case RecoveryPhase:
+			ws.Workout.Sets[setIndex].Recovery = currentPhaseStats
+		}
+	} else {
+		// Save phase stats to current set
+		setIndex := ws.CurrentSet
+		for len(ws.Workout.Sets) <= setIndex {
+			ws.Workout.Sets = append(ws.Workout.Sets, SetStats{})
+		}
+
+		switch currentPhaseStats.Phase {
+		case WarmupPhase:
+			ws.Workout.Sets[setIndex].Warmup = currentPhaseStats
+		case WorkPhase:
+			ws.Workout.Sets[setIndex].Work = currentPhaseStats
+		}
+	}
+
+	// Start next phase
+	ws.StartPhase(nextPhase, time.Now())
+
+	// Load appropriate snippet for next phase
+	switch nextPhase {
+	case WarmupPhase:
+		ws.CurrentSnippet = GetWarmupSnippet()
+	case WorkPhase:
+		ws.CurrentSnippet = GetRandomSnippet(ws.Workout.FocusMode)
+	case RecoveryPhase:
+		ws.CurrentSnippet = GetRecoverySnippet(ws.RecoveryQuote)
+	}
+
+	// Reset typing state for new phase
+	m.typedText = ""
+	m.currentPos = 0
+	m.snippet = ws.CurrentSnippet
+	m.stats = TypingStats{
+		StartTime: time.Now(),
+		Errors:    []TypingError{},
+	}
+
+	return m, nil
+}
+
+func (m *model) completeHIITWorkout() {
+	ws := m.workoutState
+	ws.Workout.EndTime = time.Now()
+	ws.Workout.Completed = true
+
+	// Save to history
+	m.history.HIITWorkouts = append(m.history.HIITWorkouts, *ws.Workout)
+	SaveHistory(m.history)
+
+	m.state = stateResults
 }
 
 func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -182,19 +311,45 @@ func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c":
 		return m, tea.Quit
 	case "esc":
+		if m.isHIITMode {
+			// In HIIT mode, esc quits the workout
+			return m, tea.Quit
+		}
 		m.state = stateMenu
 		return m, nil
-	case "ctrl+n", "ctrl+s":
-		var newIndex int
-		m.snippet, newIndex = GetNextSnippet(m.mode, m.snippetIndex)
-		m.snippetIndex = newIndex
-		m.typedText = ""
-		m.currentPos = 0
-		m.stats = TypingStats{
-			StartTime: time.Now(),
-			Errors:    []TypingError{},
+	case " ":
+		// Space bar toggles pause in HIIT mode
+		if m.isHIITMode && m.workoutState != nil {
+			if m.workoutState.Paused {
+				// Resume
+				pauseDuration := time.Since(m.workoutState.PausedAt)
+				m.workoutState.PhasePausedDuration += pauseDuration
+				m.workoutState.Paused = false
+			} else {
+				// Pause
+				m.workoutState.Paused = true
+				m.workoutState.PausedAt = time.Now()
+			}
+			return m, nil
 		}
-		return m, nil
+		// In freeform mode, space is a regular character
+		if !m.isHIITMode {
+			m = m.processChar(' ')
+		}
+	case "ctrl+n", "ctrl+s":
+		// Only allow skip snippet in freeform mode
+		if !m.isHIITMode {
+			var newIndex int
+			m.snippet, newIndex = GetNextSnippet(m.mode, m.snippetIndex)
+			m.snippetIndex = newIndex
+			m.typedText = ""
+			m.currentPos = 0
+			m.stats = TypingStats{
+				StartTime: time.Now(),
+				Errors:    []TypingError{},
+			}
+			return m, nil
+		}
 	case "backspace":
 		if len(m.typedText) > 0 {
 			m.typedText = m.typedText[:len(m.typedText)-1]
@@ -350,7 +505,91 @@ var (
 	statsStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("86")).
 			MarginTop(1)
+
+	warmupStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("226")).
+			Bold(true)
+
+	workStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("196")).
+			Bold(true)
+
+	recoveryStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("78")).
+			Bold(true)
+
+	timerBoxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("240")).
+			Padding(0, 1).
+			MarginBottom(1)
 )
+
+func renderProgressBar(progress float64, width int) string {
+	if progress < 0 {
+		progress = 0
+	}
+	if progress > 1 {
+		progress = 1
+	}
+	filled := int(progress * float64(width))
+	return strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
+}
+
+func formatTime(seconds int) string {
+	if seconds < 0 {
+		seconds = 0
+	}
+	mins := seconds / 60
+	secs := seconds % 60
+	return fmt.Sprintf("%02d:%02d", mins, secs)
+}
+
+func (m model) renderPhaseTimer() string {
+	if m.workoutState == nil {
+		return ""
+	}
+
+	ws := m.workoutState
+	var phaseStyle lipgloss.Style
+	var phaseName string
+
+	switch ws.CurrentPhase {
+	case WarmupPhase:
+		phaseStyle = warmupStyle
+		phaseName = "WARMUP"
+	case WorkPhase:
+		phaseStyle = workStyle
+		phaseName = "WORK"
+	case RecoveryPhase:
+		phaseStyle = recoveryStyle
+		phaseName = "RECOVERY"
+	}
+
+	var b strings.Builder
+
+	// Phase header with set number
+	setInfo := fmt.Sprintf("%s - Set %d/%d", phaseName, ws.CurrentSet+1, ws.Workout.TotalSets)
+	b.WriteString(phaseStyle.Render(setInfo))
+	b.WriteString("\n")
+
+	// Timer display
+	remaining := ws.RemainingTime()
+	if ws.Paused {
+		b.WriteString(subtitleStyle.Render(fmt.Sprintf("⏸  PAUSED - %s remaining", formatTime(remaining))))
+	} else {
+		b.WriteString(fmt.Sprintf("⏱  %s remaining", formatTime(remaining)))
+	}
+	b.WriteString("\n")
+
+	// Progress bar
+	progress := ws.Progress()
+	progressBar := renderProgressBar(progress, 40)
+	b.WriteString(progressBar)
+	b.WriteString(fmt.Sprintf(" %.0f%%", progress*100))
+
+	return timerBoxStyle.Render(b.String())
+}
 
 func (m model) viewMenu() string {
 	var b strings.Builder
@@ -395,9 +634,29 @@ func (m model) viewMenu() string {
 func (m model) viewTyping() string {
 	var b strings.Builder
 
-	header := fmt.Sprintf("%s - %s", modeName(m.mode), m.snippet.Language)
-	b.WriteString(titleStyle.Render(header))
-	b.WriteString("\n\n")
+	// Show HIIT timer if in HIIT mode
+	if m.isHIITMode && m.workoutState != nil {
+		b.WriteString(m.renderPhaseTimer())
+		b.WriteString("\n")
+
+		// Add phase-specific message
+		var phaseMsg string
+		switch m.workoutState.CurrentPhase {
+		case WarmupPhase:
+			phaseMsg = "Get your fingers moving with basic patterns..."
+		case WorkPhase:
+			phaseMsg = "PUSH! Maximum intensity!"
+		case RecoveryPhase:
+			phaseMsg = "Breathe... Reflect on the wisdom below..."
+		}
+		b.WriteString(subtitleStyle.Render(phaseMsg))
+		b.WriteString("\n\n")
+	} else {
+		// Regular freeform mode header
+		header := fmt.Sprintf("%s - %s", modeName(m.mode), m.snippet.Language)
+		b.WriteString(titleStyle.Render(header))
+		b.WriteString("\n\n")
+	}
 
 	for i, char := range m.snippet.Content {
 		isCursor := i == m.currentPos
@@ -450,15 +709,25 @@ func (m model) viewTyping() string {
 	}
 
 	b.WriteString("\n")
-	progress := float64(m.currentPos) / float64(len(m.snippet.Content)) * 100
-	b.WriteString(statsStyle.Render(fmt.Sprintf("\nProgress: %.0f%%", progress)))
 
-	if m.stats.TotalChars > 0 {
-		b.WriteString(statsStyle.Render(fmt.Sprintf(" | Accuracy: %.1f%%", m.stats.Accuracy())))
+	// Show stats only in freeform mode (HIIT mode has timer instead)
+	if !m.isHIITMode {
+		progress := float64(m.currentPos) / float64(len(m.snippet.Content)) * 100
+		b.WriteString(statsStyle.Render(fmt.Sprintf("\nProgress: %.0f%%", progress)))
+
+		if m.stats.TotalChars > 0 {
+			b.WriteString(statsStyle.Render(fmt.Sprintf(" | Accuracy: %.1f%%", m.stats.Accuracy())))
+		}
 	}
 
 	b.WriteString("\n\n")
-	b.WriteString(subtitleStyle.Render("ctrl+n: next snippet • esc: menu • ctrl+c: quit"))
+
+	// Show different controls for HIIT vs freeform mode
+	if m.isHIITMode {
+		b.WriteString(subtitleStyle.Render("space: pause/resume • esc: quit workout"))
+	} else {
+		b.WriteString(subtitleStyle.Render("ctrl+n: next snippet • esc: menu • ctrl+c: quit"))
+	}
 
 	return b.String()
 }
@@ -495,7 +764,63 @@ func (m model) viewResults() string {
 	return b.String()
 }
 
+func demoHIITTimer() model {
+	history, err := LoadHistory()
+	if err != nil {
+		history = &SessionHistory{Sessions: []Session{}}
+	}
+
+	// Create a Quick workout (3 sets) with EasyCode mode
+	workout := &HIITWorkout{
+		WorkoutType: QuickWorkout,
+		FocusMode:   EasyCode,
+		TotalSets:   QuickWorkout.Sets(),
+		StartTime:   time.Now(),
+		Sets:        []SetStats{},
+	}
+
+	// Select recovery quote once at start
+	recoveryQuote := SelectWorkoutRecoveryQuote()
+
+	// Initialize workout state
+	workoutState := &WorkoutState{
+		Workout:        workout,
+		CurrentSet:     0,
+		CurrentPhase:   WarmupPhase,
+		RecoveryQuote:  recoveryQuote,
+		Paused:         false,
+	}
+
+	// Start warmup phase
+	workoutState.StartPhase(WarmupPhase, time.Now())
+	workoutState.CurrentSnippet = GetWarmupSnippet()
+
+	// Create model with HIIT mode enabled
+	return model{
+		state:        stateTyping,
+		mode:         EasyCode,
+		snippet:      workoutState.CurrentSnippet,
+		typedText:    "",
+		currentPos:   0,
+		stats:        TypingStats{StartTime: time.Now(), Errors: []TypingError{}},
+		history:      history,
+		isHIITMode:   true,
+		workoutState: workoutState,
+	}
+}
+
 func main() {
+	// Check if we should run HIIT demo
+	if len(os.Args) > 1 && os.Args[1] == "--demo-hiit" {
+		p := tea.NewProgram(demoHIITTimer())
+		if _, err := p.Run(); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	// Normal mode
 	p := tea.NewProgram(initialModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error: %v\n", err)
