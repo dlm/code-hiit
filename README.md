@@ -1,35 +1,35 @@
-# Typing Trainer
+# code-hiit
 
-A CLI typing trainer built with Go and Bubble Tea for practicing code patterns.
+code-hiit is a CLI typing trainer built with Go and Bubble Tea for practicing code patterns.
 
 ## Installation
 
 ```bash
-go build -o typing-trainer
+go build -o code-hiit
 ```
 
 ## Usage
 
 Run the trainer:
 ```bash
-./typing-trainer
+./code-hiit
 ```
 
 Select a mode and start typing! The trainer tracks your WPM, accuracy, and specific metrics for numbers and symbols.
 
 ## Modes
 
-- **Easy/Medium/Hard** - Code snippets of varying complexity
-- **Numbers** - Practice typing numbers and numeric expressions
+- **Easy Code / Medium Code / Hard Code** - Code snippets of varying complexity
+- **Numbers Practice** - Practice typing numbers and numeric expressions
+- **Symbols Practice** - Focus on special characters and operators
 - **Hex Numbers** - Practice hexadecimal notation
-- **Symbols** - Focus on special characters and operators
-- **Brackets** - Practice matching pairs: (){}[]<>
+- **Brackets Practice** - Practice matching pairs: (){}[]<>
 - **Regex Patterns** - Complex regex patterns
 - **Custom** - Your own custom snippets
 
 ## Custom Snippets
 
-Create `~/.config/typing-trainer/snippets.json` to add your own practice material:
+Create `~/.config/code-hiit/snippets.json` to add your own practice material:
 
 ```json
 {
@@ -47,9 +47,9 @@ See `snippets.example.json` for more examples.
 ## Configuration
 
 The app follows XDG Base Directory specification:
-- Config: `~/.config/typing-trainer/` (or `$XDG_CONFIG_HOME/typing-trainer/`)
-- History: `~/.config/typing-trainer/history.json`
-- Custom snippets: `~/.config/typing-trainer/snippets.json`
+- Config: `~/.config/code-hiit/` (or `$XDG_CONFIG_HOME/code-hiit/`)
+- History: `~/.config/code-hiit/history.json`
+- Custom snippets: `~/.config/code-hiit/snippets.json`
 
 Old files from `~/` are automatically migrated on first run.
 

@@ -1,25 +1,28 @@
 package main
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
-type Difficulty int
+type Mode int
 
 const (
-	Easy Difficulty = iota
-	Medium
-	Hard
-	Numbers
-	Symbols
+	EasyCode Mode = iota
+	MediumCode
+	HardCode
+	NumbersPractice
+	SymbolsPractice
 	HexNumbers
-	Brackets
+	BracketsPractice
 	RegexPatterns
 	Custom
 )
 
 type CodeSnippet struct {
-	Content    string
-	Language   string
-	Difficulty Difficulty
+	Content  string `json:"content"`
+	Language string `json:"language"`
+	Mode     Mode   `json:"mode"`
 }
 
 type TypingStats struct {
@@ -79,10 +82,41 @@ type SessionHistory struct {
 }
 
 type Session struct {
-	Date       time.Time   `json:"date"`
-	Difficulty Difficulty  `json:"difficulty"`
-	Language   string      `json:"language"`
-	Stats      TypingStats `json:"stats"`
+	Date     time.Time   `json:"date"`
+	Mode     Mode        `json:"mode"`
+	Language string      `json:"language"`
+	Stats    TypingStats `json:"stats"`
+}
+
+// UnmarshalJSON accepts both the new "mode" field and legacy "difficulty" data.
+func (s *Session) UnmarshalJSON(data []byte) error {
+	type sessionAlias struct {
+		Date       time.Time   `json:"date"`
+		Mode       *Mode       `json:"mode"`
+		Difficulty *Mode       `json:"difficulty"`
+		Language   string      `json:"language"`
+		Stats      TypingStats `json:"stats"`
+	}
+
+	var alias sessionAlias
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+
+	s.Date = alias.Date
+	s.Language = alias.Language
+	s.Stats = alias.Stats
+
+	switch {
+	case alias.Mode != nil:
+		s.Mode = *alias.Mode
+	case alias.Difficulty != nil:
+		s.Mode = *alias.Difficulty
+	default:
+		s.Mode = EasyCode
+	}
+
+	return nil
 }
 
 func isSymbol(r rune) bool {

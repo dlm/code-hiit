@@ -18,24 +18,24 @@ const (
 	stateResults
 )
 
-var difficultyOptions = []Difficulty{Easy, Medium, Hard, Numbers, Symbols, HexNumbers, Brackets, RegexPatterns, Custom}
+var modeOptions = []Mode{EasyCode, MediumCode, HardCode, NumbersPractice, SymbolsPractice, HexNumbers, BracketsPractice, RegexPatterns, Custom}
 
-func difficultyName(d Difficulty) string {
-	switch d {
-	case Easy:
-		return "Easy"
-	case Medium:
-		return "Medium"
-	case Hard:
-		return "Hard"
-	case Numbers:
-		return "Numbers"
+func modeName(m Mode) string {
+	switch m {
+	case EasyCode:
+		return "Easy Code"
+	case MediumCode:
+		return "Medium Code"
+	case HardCode:
+		return "Hard Code"
+	case NumbersPractice:
+		return "Numbers Practice"
 	case HexNumbers:
 		return "Hex Numbers"
-	case Symbols:
-		return "Symbols"
-	case Brackets:
-		return "Brackets"
+	case SymbolsPractice:
+		return "Symbols Practice"
+	case BracketsPractice:
+		return "Brackets Practice"
 	case RegexPatterns:
 		return "Regex Patterns"
 	case Custom:
@@ -62,10 +62,10 @@ func fuzzyMatch(query, target string) bool {
 }
 
 func (m *model) updateFilteredModes() {
-	m.filteredModes = []Difficulty{}
-	for _, diff := range difficultyOptions {
-		if fuzzyMatch(m.searchInput, difficultyName(diff)) {
-			m.filteredModes = append(m.filteredModes, diff)
+	m.filteredModes = []Mode{}
+	for _, mode := range modeOptions {
+		if fuzzyMatch(m.searchInput, modeName(mode)) {
+			m.filteredModes = append(m.filteredModes, mode)
 		}
 	}
 	if m.menuCursor >= len(m.filteredModes) {
@@ -78,7 +78,7 @@ func (m *model) updateFilteredModes() {
 
 type model struct {
 	state         state
-	difficulty    Difficulty
+	mode          Mode
 	snippet       CodeSnippet
 	snippetIndex  int
 	typedText     string
@@ -87,7 +87,7 @@ type model struct {
 	history       *SessionHistory
 	menuCursor    int
 	searchInput   string
-	filteredModes []Difficulty
+	filteredModes []Mode
 	err           error
 }
 
@@ -101,7 +101,7 @@ func initialModel() model {
 		menuCursor:    0,
 		history:       history,
 		searchInput:   "",
-		filteredModes: difficultyOptions,
+		filteredModes: modeOptions,
 	}
 }
 
@@ -138,8 +138,8 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case "enter":
 		if len(m.filteredModes) > 0 {
-			m.difficulty = m.filteredModes[m.menuCursor]
-			m.snippet = GetRandomSnippet(m.difficulty)
+			m.mode = m.filteredModes[m.menuCursor]
+			m.snippet = GetRandomSnippet(m.mode)
 			m.snippetIndex = 0
 			m.typedText = ""
 			m.currentPos = 0
@@ -181,7 +181,7 @@ func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case "ctrl+n", "ctrl+s":
 		var newIndex int
-		m.snippet, newIndex = GetNextSnippet(m.difficulty, m.snippetIndex)
+		m.snippet, newIndex = GetNextSnippet(m.mode, m.snippetIndex)
 		m.snippetIndex = newIndex
 		m.typedText = ""
 		m.currentPos = 0
@@ -278,10 +278,10 @@ func (m model) processChar(char rune) model {
 func (m *model) completeSession() {
 	m.stats.EndTime = time.Now()
 	session := Session{
-		Date:       time.Now(),
-		Difficulty: m.difficulty,
-		Language:   m.snippet.Language,
-		Stats:      m.stats,
+		Date:     time.Now(),
+		Mode:     m.mode,
+		Language: m.snippet.Language,
+		Stats:    m.stats,
 	}
 	m.history.AddSession(session)
 	SaveHistory(m.history)
@@ -293,7 +293,7 @@ func (m model) updateResults(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c", "q":
 		return m, tea.Quit
 	case "enter", "r":
-		m.snippet = GetRandomSnippet(m.difficulty)
+		m.snippet = GetRandomSnippet(m.mode)
 		m.typedText = ""
 		m.currentPos = 0
 		m.stats = TypingStats{
@@ -350,9 +350,9 @@ var (
 func (m model) viewMenu() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Code Typing Trainer"))
+	b.WriteString(titleStyle.Render("code-hiit"))
 	b.WriteString("\n")
-	b.WriteString(subtitleStyle.Render("Select mode:"))
+	b.WriteString(subtitleStyle.Render("Select Mode:"))
 	b.WriteString("\n\n")
 
 	// Show search input
@@ -369,13 +369,13 @@ func (m model) viewMenu() string {
 		b.WriteString(subtitleStyle.Render("  No matches found"))
 		b.WriteString("\n")
 	} else {
-		for i, diff := range m.filteredModes {
+		for i, mode := range m.filteredModes {
 			cursor := " "
 			if m.menuCursor == i {
 				cursor = ">"
-				b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %s", cursor, difficultyName(diff))))
+				b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %s", cursor, modeName(mode))))
 			} else {
-				b.WriteString(fmt.Sprintf(" %s %s", cursor, difficultyName(diff)))
+				b.WriteString(fmt.Sprintf(" %s %s", cursor, modeName(mode)))
 			}
 			b.WriteString("\n")
 		}
@@ -390,7 +390,7 @@ func (m model) viewMenu() string {
 func (m model) viewTyping() string {
 	var b strings.Builder
 
-	header := fmt.Sprintf("%s - %s", difficultyName(m.difficulty), m.snippet.Language)
+	header := fmt.Sprintf("%s - %s", modeName(m.mode), m.snippet.Language)
 	b.WriteString(titleStyle.Render(header))
 	b.WriteString("\n\n")
 

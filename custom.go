@@ -62,9 +62,9 @@ func LoadCustomSnippets() ([]CodeSnippet, error) {
 			language = "Custom"
 		}
 		snippets[i] = CodeSnippet{
-			Content:    entry.Content,
-			Language:   language,
-			Difficulty: Custom,
+			Content:  entry.Content,
+			Language: language,
+			Mode:     Custom,
 		}
 	}
 
