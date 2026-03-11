@@ -14,8 +14,11 @@ import (
 type state int
 
 const (
-	stateMenu state = iota
+	stateMainMenu state = iota
+	stateModePicker
+	stateWorkoutPicker
 	stateTyping
+	stateHIITWorkout
 	stateResults
 )
 
@@ -103,8 +106,15 @@ type model struct {
 	filteredModes []Mode
 	err           error
 	// HIIT workout mode
-	workoutState *WorkoutState
-	isHIITMode   bool
+	workoutState        *WorkoutState
+	isHIITMode          bool
+	// Main menu
+	mainMenuCursor      int
+	// Workout picker
+	workoutPickerStep   int // 0=workout type, 1=mode selection
+	selectedWorkoutType WorkoutType
+	workoutTypeCursor   int
+	workoutModeCursor   int
 }
 
 func initialModel() model {
@@ -113,11 +123,12 @@ func initialModel() model {
 		history = &SessionHistory{Sessions: []Session{}}
 	}
 	return model{
-		state:         stateMenu,
-		menuCursor:    0,
-		history:       history,
-		searchInput:   "",
-		filteredModes: modeOptions,
+		state:          stateMainMenu,
+		menuCursor:     0,
+		history:        history,
+		searchInput:    "",
+		filteredModes:  modeOptions,
+		mainMenuCursor: 1, // Default to HIIT Workout
 	}
 }
 
@@ -132,10 +143,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch m.state {
-		case stateMenu:
-			return m.updateMenu(msg)
+		case stateMainMenu:
+			return m.updateMainMenu(msg)
+		case stateModePicker:
+			return m.updateModePicker(msg)
+		case stateWorkoutPicker:
+			return m.updateWorkoutPicker(msg)
 		case stateTyping:
 			return m.updateTyping(msg)
+		case stateHIITWorkout:
+			return m.updateHIITWorkout(msg)
 		case stateResults:
 			return m.updateResults(msg)
 		}
@@ -265,7 +282,111 @@ func (m *model) completeHIITWorkout() {
 	m.state = stateResults
 }
 
-func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m model) updateMainMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+c", "q":
+		return m, tea.Quit
+	case "up", "ctrl+p":
+		if m.mainMenuCursor > 0 {
+			m.mainMenuCursor--
+		}
+	case "down", "ctrl+n":
+		if m.mainMenuCursor < 1 { // Only 2 options: Freeform (0) and HIIT (1)
+			m.mainMenuCursor++
+		}
+	case "enter":
+		if m.mainMenuCursor == 0 {
+			// Freeform Practice selected
+			m.state = stateModePicker
+			m.searchInput = ""
+			m.menuCursor = 0
+			m.updateFilteredModes()
+		} else {
+			// HIIT Workout selected
+			m.state = stateWorkoutPicker
+			m.workoutPickerStep = 0
+			m.workoutTypeCursor = 1 // Default to Standard
+			m.searchInput = ""
+			m.workoutModeCursor = 0
+			m.updateFilteredModes()
+		}
+	}
+	return m, nil
+}
+
+func (m model) updateWorkoutPicker(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.workoutPickerStep == 0 {
+		// Step 1: Select workout type
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		case "esc":
+			m.state = stateMainMenu
+		case "up", "ctrl+p":
+			if m.workoutTypeCursor > 0 {
+				m.workoutTypeCursor--
+			}
+		case "down", "ctrl+n":
+			if m.workoutTypeCursor < 2 { // 3 options: Quick(0), Standard(1), Extended(2)
+				m.workoutTypeCursor++
+			}
+		case "enter":
+			// Select workout type based on cursor
+			switch m.workoutTypeCursor {
+			case 0:
+				m.selectedWorkoutType = QuickWorkout
+			case 1:
+				m.selectedWorkoutType = StandardWorkout
+			case 2:
+				m.selectedWorkoutType = ExtendedWorkout
+			}
+			m.workoutPickerStep = 1
+			m.searchInput = ""
+			m.workoutModeCursor = 0
+			m.updateFilteredModes()
+		}
+	} else {
+		// Step 2: Select focus mode (reuse mode picker logic)
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		case "esc":
+			if m.searchInput != "" {
+				m.searchInput = ""
+				m.workoutModeCursor = 0
+				m.updateFilteredModes()
+			} else {
+				m.workoutPickerStep = 0
+			}
+		case "up", "ctrl+p":
+			if m.workoutModeCursor > 0 {
+				m.workoutModeCursor--
+			}
+		case "down", "ctrl+n":
+			if m.workoutModeCursor < len(m.filteredModes)-1 {
+				m.workoutModeCursor++
+			}
+		case "enter":
+			if len(m.filteredModes) > 0 {
+				return m.startHIITWorkout()
+			}
+		case "backspace":
+			if len(m.searchInput) > 0 {
+				m.searchInput = m.searchInput[:len(m.searchInput)-1]
+				m.updateFilteredModes()
+			}
+		default:
+			key := msg.String()
+			if len(key) == 1 {
+				m.searchInput += key
+				m.updateFilteredModes()
+			}
+		}
+	}
+	return m, nil
+}
+
+func (m model) updateModePicker(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
@@ -301,7 +422,7 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.menuCursor = 0
 			m.updateFilteredModes()
 		} else {
-			return m, tea.Quit
+			m.state = stateMainMenu
 		}
 	default:
 		key := msg.String()
@@ -313,16 +434,63 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m model) startHIITWorkout() (tea.Model, tea.Cmd) {
+	// Create workout
+	workout := &HIITWorkout{
+		WorkoutType: m.selectedWorkoutType,
+		FocusMode:   m.filteredModes[m.workoutModeCursor],
+		TotalSets:   m.selectedWorkoutType.Sets(),
+		StartTime:   time.Now(),
+		Sets:        []SetStats{},
+	}
+
+	// Select recovery quote for entire workout
+	recoveryQuote := SelectWorkoutRecoveryQuote()
+
+	// Initialize state
+	m.workoutState = &WorkoutState{
+		Workout:       workout,
+		CurrentSet:    0,
+		CurrentPhase:  WarmupPhase,
+		RecoveryQuote: recoveryQuote,
+	}
+
+	// Start first phase (warmup)
+	m.workoutState.StartPhase(WarmupPhase, time.Now())
+	m.workoutState.CurrentSnippet = GetWarmupSnippet()
+	m.workoutState.SnippetIndex = 0
+	m.snippet = m.workoutState.CurrentSnippet
+	m.typedText = ""
+	m.currentPos = 0
+	m.stats = TypingStats{
+		StartTime: time.Now(),
+		Errors:    []TypingError{},
+	}
+
+	m.isHIITMode = true
+	m.state = stateHIITWorkout
+
+	return m, tickCmd()
+}
+
+func (m model) updateHIITWorkout(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Reuse typing logic
+	return m.updateTyping(msg)
+}
+
 func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c":
 		return m, tea.Quit
 	case "esc":
 		if m.isHIITMode {
-			// In HIIT mode, esc quits the workout
-			return m, tea.Quit
+			// In HIIT mode, esc returns to main menu
+			m.isHIITMode = false
+			m.workoutState = nil
+			m.state = stateMainMenu
+			return m, nil
 		}
-		m.state = stateMenu
+		m.state = stateModePicker
 		return m, nil
 	case " ":
 		// Space bar toggles pause in HIIT mode
@@ -469,17 +637,23 @@ func (m model) updateResults(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		m.state = stateTyping
 	case "m":
-		m.state = stateMenu
+		m.state = stateMainMenu
 	}
 	return m, nil
 }
 
 func (m model) View() string {
 	switch m.state {
-	case stateMenu:
-		return m.viewMenu()
+	case stateMainMenu:
+		return m.viewMainMenu()
+	case stateModePicker:
+		return m.viewModePicker()
+	case stateWorkoutPicker:
+		return m.viewWorkoutPicker()
 	case stateTyping:
 		return m.viewTyping()
+	case stateHIITWorkout:
+		return m.viewHIITWorkout()
 	case stateResults:
 		return m.viewResults()
 	}
@@ -530,6 +704,10 @@ var (
 			BorderForeground(lipgloss.Color("240")).
 			Padding(0, 1).
 			MarginBottom(1)
+
+	helpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			Italic(true)
 )
 
 func renderProgressBar(progress float64, width int) string {
@@ -598,7 +776,112 @@ func (m model) renderPhaseTimer() string {
 	return timerBoxStyle.Render(b.String())
 }
 
-func (m model) viewMenu() string {
+func (m model) viewMainMenu() string {
+	var b strings.Builder
+
+	b.WriteString(titleStyle.Render("code-hiit"))
+	b.WriteString("\n\n")
+	b.WriteString(subtitleStyle.Render("Choose your training:"))
+	b.WriteString("\n\n")
+
+	// Option 0: Freeform Practice
+	cursor := " "
+	if m.mainMenuCursor == 0 {
+		cursor = ">"
+		b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s Freeform Practice", cursor)))
+	} else {
+		b.WriteString(fmt.Sprintf(" %s Freeform Practice", cursor))
+	}
+	b.WriteString("\n")
+
+	// Option 1: HIIT Workout
+	cursor = " "
+	if m.mainMenuCursor == 1 {
+		cursor = ">"
+		b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s HIIT Workout", cursor)))
+	} else {
+		b.WriteString(fmt.Sprintf(" %s HIIT Workout", cursor))
+	}
+	b.WriteString("\n\n")
+
+	b.WriteString(helpStyle.Render("↑/↓ navigate • enter select • q quit"))
+	return b.String()
+}
+
+func (m model) viewWorkoutPicker() string {
+	var b strings.Builder
+
+	if m.workoutPickerStep == 0 {
+		// Step 1: Select workout type
+		b.WriteString(titleStyle.Render("HIIT Workout"))
+		b.WriteString("\n\n")
+		b.WriteString(subtitleStyle.Render("Select workout intensity:"))
+		b.WriteString("\n\n")
+
+		workouts := []struct {
+			name     string
+			duration string
+		}{
+			{"Quick (3 sets)", "~2 mins"},
+			{"Standard (5 sets)", "~4 mins"},
+			{"Extended (8 sets)", "~6 mins"},
+		}
+
+		for i, w := range workouts {
+			cursor := " "
+			if m.workoutTypeCursor == i {
+				cursor = ">"
+				b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %-20s %s", cursor, w.name, w.duration)))
+			} else {
+				b.WriteString(fmt.Sprintf(" %s %-20s %s", cursor, w.name, w.duration))
+			}
+			b.WriteString("\n")
+		}
+
+		b.WriteString("\n")
+		b.WriteString(helpStyle.Render("↑/↓ navigate • enter select • esc back"))
+	} else {
+		// Step 2: Select focus mode
+		workoutName := m.selectedWorkoutType.String()
+		b.WriteString(titleStyle.Render(workoutName))
+		b.WriteString("\n\n")
+		b.WriteString(subtitleStyle.Render("Select focus for work intervals:"))
+		b.WriteString("\n\n")
+
+		// Search input
+		searchPrompt := "> "
+		if m.searchInput == "" {
+			b.WriteString(subtitleStyle.Render(searchPrompt + "_"))
+		} else {
+			b.WriteString(subtitleStyle.Render(searchPrompt + m.searchInput + "_"))
+		}
+		b.WriteString("\n\n")
+
+		// Show filtered modes
+		if len(m.filteredModes) == 0 {
+			b.WriteString(subtitleStyle.Render("  No matches found"))
+			b.WriteString("\n")
+		} else {
+			for i, mode := range m.filteredModes {
+				cursor := " "
+				if m.workoutModeCursor == i {
+					cursor = ">"
+					b.WriteString(selectedStyle.Render(fmt.Sprintf(" %s %s", cursor, modeName(mode))))
+				} else {
+					b.WriteString(fmt.Sprintf(" %s %s", cursor, modeName(mode)))
+				}
+				b.WriteString("\n")
+			}
+		}
+
+		b.WriteString("\n")
+		b.WriteString(helpStyle.Render("Type to filter • ↑/↓ navigate • enter start • esc back"))
+	}
+
+	return b.String()
+}
+
+func (m model) viewModePicker() string {
 	var b strings.Builder
 
 	b.WriteString(titleStyle.Render("code-hiit"))
@@ -636,6 +919,11 @@ func (m model) viewMenu() string {
 	b.WriteString(subtitleStyle.Render("type to search • ↑/↓/ctrl-n/ctrl-p: navigate • enter: select • esc: clear/quit"))
 
 	return b.String()
+}
+
+func (m model) viewHIITWorkout() string {
+	// Reuse viewTyping which already has HIIT support
+	return m.viewTyping()
 }
 
 func (m model) viewTyping() string {
