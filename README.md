@@ -70,3 +70,7 @@ Old files from `~/` are automatically migrated on first run.
 - Enter to try another snippet
 - m to return to menu
 - q to quit
+
+## License
+
+MIT License — see `LICENSE` for details.
