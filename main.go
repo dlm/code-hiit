@@ -493,7 +493,7 @@ func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		m.state = stateModePicker
 		return m, nil
-	case "ctrl+ ":
+	case "ctrl+ ", "ctrl+@":
 		// ctrl+space toggles pause in HIIT mode
 		if m.isHIITMode && m.workoutState != nil {
 			if m.workoutState.Paused {
