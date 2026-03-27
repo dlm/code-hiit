@@ -501,6 +501,7 @@ func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				pauseDuration := time.Since(m.workoutState.PausedAt)
 				m.workoutState.PhasePausedDuration += pauseDuration
 				m.workoutState.Paused = false
+				m.workoutState.PausedAt = time.Time{}
 			} else {
 				// Pause
 				m.workoutState.Paused = true
@@ -508,6 +509,14 @@ func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
+	}
+
+	// Block all typing input during pause in HIIT mode
+	if m.isHIITMode && m.workoutState != nil && m.workoutState.Paused {
+		return m, nil
+	}
+
+	switch msg.String() {
 	case " ":
 		// Space is a regular character for typing
 		m = m.processChar(' ')
@@ -565,7 +574,9 @@ func (m model) processChar(char rune) model {
 					m.currentPos++
 				}
 				if m.currentPos >= len(m.snippet.Content) {
-					m.completeSession()
+					if !m.isHIITMode {
+						m.completeSession()
+					}
 				}
 				return m
 			}
@@ -604,7 +615,9 @@ func (m model) processChar(char rune) model {
 	m.currentPos++
 
 	if m.currentPos >= len(m.snippet.Content) {
-		m.completeSession()
+		if !m.isHIITMode {
+			m.completeSession()
+		}
 	}
 
 	return m
