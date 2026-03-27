@@ -267,7 +267,8 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 		Errors:    []TypingError{},
 	}
 
-	return m, nil
+	// Continue the timer tick loop
+	return m, tickCmd()
 }
 
 func (m *model) completeHIITWorkout() {
