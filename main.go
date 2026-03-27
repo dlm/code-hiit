@@ -492,8 +492,8 @@ func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		m.state = stateModePicker
 		return m, nil
-	case " ":
-		// Space bar toggles pause in HIIT mode
+	case "ctrl+ ":
+		// ctrl+space toggles pause in HIIT mode
 		if m.isHIITMode && m.workoutState != nil {
 			if m.workoutState.Paused {
 				// Resume
@@ -507,10 +507,9 @@ func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
-		// In freeform mode, space is a regular character
-		if !m.isHIITMode {
-			m = m.processChar(' ')
-		}
+	case " ":
+		// Space is a regular character for typing
+		m = m.processChar(' ')
 	case "ctrl+n", "ctrl+s":
 		// Only allow skip snippet in freeform mode
 		if !m.isHIITMode {
@@ -1028,7 +1027,7 @@ func (m model) viewTyping() string {
 
 	// Show different controls for HIIT vs freeform mode
 	if m.isHIITMode {
-		b.WriteString(subtitleStyle.Render("space: pause/resume • esc: quit workout"))
+		b.WriteString(subtitleStyle.Render("ctrl+space: pause/resume • esc: quit workout"))
 	} else {
 		b.WriteString(subtitleStyle.Render("ctrl+n: next snippet • esc: menu • ctrl+c: quit"))
 	}
