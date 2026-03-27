@@ -5,6 +5,7 @@ code-hiit
 *.dll
 *.so
 *.dylib
+.cache
 
 # Go
 *.test
