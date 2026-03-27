@@ -227,6 +227,37 @@
       opacity: 0.85;
     }
 
+    .terminal-screenshot {
+      background: #3e4257;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      padding-top: 24px;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: visible;
+    }
+
+    .terminal-screenshot::before {
+      content: '~ : ./code-hiit';
+      position: absolute;
+      top: 8px;
+      left: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8B9BB3;
+    }
+
+    .terminal-screenshot img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+      margin-top: -20px;
+      margin-left: -8px;
+      clip-path: inset(20px 0 0 8px);
+    }
+
     .terminal pre {
       margin: 0;
       font-family: var(--font-mono);
@@ -235,6 +266,20 @@
       line-height: 1.6;
       white-space: pre-wrap;
     }
+
+    .terminal .work-label { color: #FF5E5B; font-weight: 600; }
+    .terminal .timer { color: #8B9BB3; }
+    .terminal .timer::before {
+      content: '⏱ ';
+      font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+    }
+    .terminal .progress-bar { color: #A0ACB8; }
+    .terminal .push-text { color: #6B7280; }
+    .terminal .code-var { color: #5DD9C1; }
+    .terminal .code-operator { color: #FF5E5B; }
+    .terminal .code-hex { color: #50FA7B; }
+    .terminal .code-cursor { color: #FF5E5B; }
+    .terminal .controls { color: #6B7280; font-size: 0.88rem; }
 
     .pill-note {
       display: inline-flex;
@@ -375,6 +420,24 @@
       line-height: 1.4;
     }
 
+    .screenshot-card {
+      background: var(--graphite);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      max-width: 1000px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .screenshot-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
     .brand-bar {
       display: flex;
       gap: 12px;
@@ -460,21 +523,8 @@
           </div>
         </div>
         <div>
-          <div class="terminal">
-            <pre><code>$ code-hiit
-Warmup   20s  ▓▓▓▓░░░░░░░░░░░░░
-Work     30s  ▓▓▓▓▓▓▓▓▓▓▓░░░░░░  symbols
-Recovery 15s  ▓▓▓▓▓▓░░░░░░░░░░░
-
-Snippet:
-for _, ch := range input {
-    if strings.ContainsRune(target, ch) {
-        hits++
-    }
-}
-
-WPM   82    Accuracy 96%    Reps 12
-History saved · Ready for next set</code></pre>
+          <div class="terminal-screenshot">
+            <img src="assets/screenshot.png" alt="Code HIIT Lab in action - HIIT workout interface">
           </div>
         </div>
       </div>
