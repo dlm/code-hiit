@@ -2,6 +2,10 @@
 
 **High-Intensity Interval Training for developers.**
 
+🌐 **[Visit the project site](https://dlm.github.io/code-hiit)** for screenshots, features, and installation guide.
+
+---
+
 Code HIIT Lab is a terminal-based typing trainer that uses HIIT methodology to build muscle memory for code patterns. Short, intense work sets with recovery periods help you master symbols, brackets, numbers, and real code snippets — the characters that trip up coders most.
 
 ## Why HIIT?
