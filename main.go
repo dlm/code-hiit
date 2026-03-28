@@ -514,7 +514,6 @@ func (m model) updateHIITWorkout(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) updatePhaseTransition(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// Allow user to skip transition with space or enter
 	switch msg.String() {
 	case "ctrl+c":
 		return m, tea.Quit
@@ -524,10 +523,8 @@ func (m model) updatePhaseTransition(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.workoutState = nil
 		m.state = stateMainMenu
 		return m, nil
-	case " ", "enter":
-		// Skip transition immediately
-		return m.completeTransition()
 	}
+	// No other keys do anything - force user to wait
 	return m, nil
 }
 
@@ -1052,7 +1049,7 @@ func (m model) viewPhaseTransition() string {
 	b.WriteString(fmt.Sprintf("Starting in %d...\n", countdown))
 
 	b.WriteString("\n")
-	b.WriteString(helpStyle.Render("space/enter: skip • esc: quit workout"))
+	b.WriteString(helpStyle.Render("esc: quit workout"))
 
 	return b.String()
 }
