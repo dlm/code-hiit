@@ -207,6 +207,7 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 
 	switch ws.CurrentPhase {
 	case WarmupPhase:
+		// Warmup only happens at the start, goes directly to first work phase
 		nextPhase = WorkPhase
 	case WorkPhase:
 		nextPhase = RecoveryPhase
@@ -228,8 +229,8 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		// Start next set with warmup
-		nextPhase = WarmupPhase
+		// After recovery, go directly to next work phase (no warmup between sets)
+		nextPhase = WorkPhase
 	}
 
 	// Save the set if recovery just completed
@@ -268,6 +269,7 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 	var nextSnippet CodeSnippet
 	switch nextPhase {
 	case WarmupPhase:
+		// This shouldn't happen anymore, but keep for safety
 		nextSnippet = GetWarmupSnippet()
 	case WorkPhase:
 		nextSnippet = GetRandomSnippet(ws.Workout.FocusMode)
@@ -829,8 +831,13 @@ func (m model) renderPhaseTimer() string {
 
 	var b strings.Builder
 
-	// Phase header with set number
-	setInfo := fmt.Sprintf("%s - Set %d/%d", phaseName, ws.CurrentSet+1, ws.Workout.TotalSets)
+	// Phase header with set number (except for warmup which is before sets)
+	var setInfo string
+	if ws.CurrentPhase == WarmupPhase {
+		setInfo = phaseName
+	} else {
+		setInfo = fmt.Sprintf("%s - Set %d/%d", phaseName, ws.CurrentSet+1, ws.Workout.TotalSets)
+	}
 	b.WriteString(phaseStyle.Render(setInfo))
 	b.WriteString("\n")
 
@@ -898,9 +905,9 @@ func (m model) viewWorkoutPicker() string {
 			name     string
 			duration string
 		}{
-			{"Quick (3 sets)", "~2m45s"},
-			{"Standard (5 sets)", "~4m35s"},
-			{"Extended (8 sets)", "~7m20s"},
+			{"Quick (3 sets)", "~2m15s"},
+			{"Standard (5 sets)", "~3m35s"},
+			{"Extended (8 sets)", "~5m35s"},
 		}
 
 		for i, w := range workouts {
@@ -1006,10 +1013,12 @@ func (m model) viewPhaseTransition() string {
 	var b strings.Builder
 	ws := m.workoutState
 
-	// Show current workout context
-	setInfo := fmt.Sprintf("Set %d/%d", ws.CurrentSet+1, ws.Workout.TotalSets)
-	b.WriteString(subtitleStyle.Render(setInfo))
-	b.WriteString("\n\n")
+	// Show current workout context (skip for warmup transition since it's before sets)
+	if m.transitionNextPhase != WarmupPhase {
+		setInfo := fmt.Sprintf("Set %d/%d", ws.CurrentSet+1, ws.Workout.TotalSets)
+		b.WriteString(subtitleStyle.Render(setInfo))
+		b.WriteString("\n\n")
+	}
 
 	// Determine phase style and name for upcoming phase
 	var phaseStyle lipgloss.Style
