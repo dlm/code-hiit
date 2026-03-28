@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"strings"
@@ -22,6 +23,8 @@ const (
 	statePhaseTransition
 	stateResults
 )
+
+const transitionDuration = 2 * time.Second
 
 type tickMsg time.Time
 
@@ -107,18 +110,18 @@ type model struct {
 	filteredModes []Mode
 	err           error
 	// HIIT workout mode
-	workoutState        *WorkoutState
-	isHIITMode          bool
+	workoutState *WorkoutState
+	isHIITMode   bool
 	// Main menu
-	mainMenuCursor      int
+	mainMenuCursor int
 	// Workout picker
 	workoutPickerStep   int // 0=workout type, 1=mode selection
 	selectedWorkoutType WorkoutType
 	workoutTypeCursor   int
 	workoutModeCursor   int
 	// Phase transition
-	transitionStartTime time.Time
-	transitionNextPhase WorkoutPhase
+	transitionStartTime   time.Time
+	transitionNextPhase   WorkoutPhase
 	transitionNextSnippet CodeSnippet
 }
 
@@ -167,7 +170,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Handle phase transition countdown
 		if m.state == statePhaseTransition {
 			elapsed := time.Since(m.transitionStartTime)
-			if elapsed >= 2*time.Second {
+			if elapsed >= transitionDuration {
 				return m.completeTransition()
 			}
 			return m, tickCmd()
@@ -1041,11 +1044,11 @@ func (m model) viewPhaseTransition() string {
 
 	// Countdown
 	elapsed := time.Since(m.transitionStartTime)
-	remaining := 2*time.Second - elapsed
+	remaining := transitionDuration - elapsed
 	if remaining < 0 {
 		remaining = 0
 	}
-	countdown := int(remaining.Seconds()) + 1
+	countdown := int(math.Ceil(remaining.Seconds()))
 	b.WriteString(fmt.Sprintf("Starting in %d...\n", countdown))
 
 	b.WriteString("\n")
@@ -1330,11 +1333,11 @@ func demoHIITTimer() model {
 
 	// Initialize workout state
 	workoutState := &WorkoutState{
-		Workout:        workout,
-		CurrentSet:     0,
-		CurrentPhase:   WarmupPhase,
-		RecoveryQuote:  recoveryQuote,
-		Paused:         false,
+		Workout:       workout,
+		CurrentSet:    0,
+		CurrentPhase:  WarmupPhase,
+		RecoveryQuote: recoveryQuote,
+		Paused:        false,
 	}
 
 	// Start warmup phase
