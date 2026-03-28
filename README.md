@@ -35,9 +35,9 @@ Pick a mode, choose your interval duration, and start typing. The timer runs aut
 ## HIIT Phases
 
 Each workout includes:
-- **Warmup** (20s) - Get your fingers ready
+- **Warmup** (15s) - Get your fingers ready
 - **Work** (30s) - Maximum intensity typing
-- **Recovery** (15s) - Brief rest between sets
+- **Recovery** (10s) - Brief rest between sets
 - **Summary** - Review your performance stats
 
 ## Controls
