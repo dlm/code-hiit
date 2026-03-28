@@ -19,6 +19,7 @@ const (
 	stateWorkoutPicker
 	stateTyping
 	stateHIITWorkout
+	statePhaseTransition
 	stateResults
 )
 
@@ -115,6 +116,10 @@ type model struct {
 	selectedWorkoutType WorkoutType
 	workoutTypeCursor   int
 	workoutModeCursor   int
+	// Phase transition
+	transitionStartTime time.Time
+	transitionNextPhase WorkoutPhase
+	transitionNextSnippet CodeSnippet
 }
 
 func initialModel() model {
@@ -153,10 +158,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateTyping(msg)
 		case stateHIITWorkout:
 			return m.updateHIITWorkout(msg)
+		case statePhaseTransition:
+			return m.updatePhaseTransition(msg)
 		case stateResults:
 			return m.updateResults(msg)
 		}
 	case tickMsg:
+		// Handle phase transition countdown
+		if m.state == statePhaseTransition {
+			elapsed := time.Since(m.transitionStartTime)
+			if elapsed >= 2*time.Second {
+				return m.completeTransition()
+			}
+			return m, tickCmd()
+		}
+
 		if m.isHIITMode && m.workoutState != nil && !m.workoutState.Paused {
 			if m.workoutState.RemainingTime() <= 0 {
 				return m.transitionPhase()
@@ -245,18 +261,33 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// Start next phase
-	ws.StartPhase(nextPhase, time.Now())
-
 	// Load appropriate snippet for next phase
+	var nextSnippet CodeSnippet
 	switch nextPhase {
 	case WarmupPhase:
-		ws.CurrentSnippet = GetWarmupSnippet()
+		nextSnippet = GetWarmupSnippet()
 	case WorkPhase:
-		ws.CurrentSnippet = GetRandomSnippet(ws.Workout.FocusMode)
+		nextSnippet = GetRandomSnippet(ws.Workout.FocusMode)
 	case RecoveryPhase:
-		ws.CurrentSnippet = GetRecoverySnippet(ws.RecoveryQuote)
+		nextSnippet = GetRecoverySnippet(ws.RecoveryQuote)
 	}
+
+	// Enter transition state
+	m.state = statePhaseTransition
+	m.transitionStartTime = time.Now()
+	m.transitionNextPhase = nextPhase
+	m.transitionNextSnippet = nextSnippet
+
+	// Continue the timer tick loop
+	return m, tickCmd()
+}
+
+func (m model) completeTransition() (tea.Model, tea.Cmd) {
+	ws := m.workoutState
+
+	// Start next phase
+	ws.StartPhase(m.transitionNextPhase, time.Now())
+	ws.CurrentSnippet = m.transitionNextSnippet
 
 	// Reset typing state for new phase
 	m.typedText = ""
@@ -266,6 +297,9 @@ func (m model) transitionPhase() (tea.Model, tea.Cmd) {
 		StartTime: time.Now(),
 		Errors:    []TypingError{},
 	}
+
+	// Return to HIIT workout state
+	m.state = stateHIITWorkout
 
 	// Continue the timer tick loop
 	return m, tickCmd()
@@ -479,6 +513,24 @@ func (m model) updateHIITWorkout(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m.updateTyping(msg)
 }
 
+func (m model) updatePhaseTransition(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Allow user to skip transition with space or enter
+	switch msg.String() {
+	case "ctrl+c":
+		return m, tea.Quit
+	case "esc":
+		// Allow quitting during transition
+		m.isHIITMode = false
+		m.workoutState = nil
+		m.state = stateMainMenu
+		return m, nil
+	case " ", "enter":
+		// Skip transition immediately
+		return m.completeTransition()
+	}
+	return m, nil
+}
+
 func (m model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c":
@@ -676,6 +728,8 @@ func (m model) View() string {
 		return m.viewTyping()
 	case stateHIITWorkout:
 		return m.viewHIITWorkout()
+	case statePhaseTransition:
+		return m.viewPhaseTransition()
 	case stateResults:
 		return m.viewResults()
 	}
@@ -946,6 +1000,61 @@ func (m model) viewModePicker() string {
 func (m model) viewHIITWorkout() string {
 	// Reuse viewTyping which already has HIIT support
 	return m.viewTyping()
+}
+
+func (m model) viewPhaseTransition() string {
+	var b strings.Builder
+	ws := m.workoutState
+
+	// Show current workout context
+	setInfo := fmt.Sprintf("Set %d/%d", ws.CurrentSet+1, ws.Workout.TotalSets)
+	b.WriteString(subtitleStyle.Render(setInfo))
+	b.WriteString("\n\n")
+
+	// Determine phase style and name for upcoming phase
+	var phaseStyle lipgloss.Style
+	var phaseName string
+	var phaseMessage string
+
+	switch m.transitionNextPhase {
+	case WarmupPhase:
+		phaseStyle = warmupStyle
+		phaseName = "WARMUP"
+		phaseMessage = "Get ready to warm up with basic patterns..."
+	case WorkPhase:
+		phaseStyle = workStyle
+		phaseName = "WORK"
+		phaseMessage = "Get ready to PUSH with maximum intensity!"
+	case RecoveryPhase:
+		phaseStyle = recoveryStyle
+		phaseName = "RECOVERY"
+		phaseMessage = "Get ready to recover and reflect..."
+	}
+
+	// Large, centered "Get Ready" message
+	b.WriteString("\n\n")
+	b.WriteString(titleStyle.Render("GET READY"))
+	b.WriteString("\n\n")
+
+	// Show the upcoming phase
+	b.WriteString(phaseStyle.Render(fmt.Sprintf("Next: %s", phaseName)))
+	b.WriteString("\n\n")
+	b.WriteString(subtitleStyle.Render(phaseMessage))
+	b.WriteString("\n\n")
+
+	// Countdown
+	elapsed := time.Since(m.transitionStartTime)
+	remaining := 2*time.Second - elapsed
+	if remaining < 0 {
+		remaining = 0
+	}
+	countdown := int(remaining.Seconds()) + 1
+	b.WriteString(fmt.Sprintf("Starting in %d...\n", countdown))
+
+	b.WriteString("\n")
+	b.WriteString(helpStyle.Render("space/enter: skip • esc: quit workout"))
+
+	return b.String()
 }
 
 func (m model) viewTyping() string {
