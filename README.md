@@ -20,7 +20,7 @@ go build -o code-hiit
 ./code-hiit
 ```
 
-Pick a mode, choose your interval duration, and start typing. The timer runs automatically through warmup, work, and recovery phases while tracking your WPM and accuracy.
+Pick a mode, choose your workout length, and start typing. The timer runs fixed 15s/30s/10s intervals (warmup/work/recovery) while tracking your WPM and accuracy.
 
 ## Workout Modes
 

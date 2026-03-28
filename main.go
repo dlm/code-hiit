@@ -801,9 +801,9 @@ func (m model) renderPhaseTimer() string {
 func (m model) viewMainMenu() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("code-hiit"))
+	b.WriteString(titleStyle.Render("Code HIIT Lab"))
 	b.WriteString("\n\n")
-	b.WriteString(subtitleStyle.Render("Choose your training:"))
+	b.WriteString(subtitleStyle.Render("HIIT intervals built for coders"))
 	b.WriteString("\n\n")
 
 	// Option 0: Freeform Practice
@@ -844,9 +844,9 @@ func (m model) viewWorkoutPicker() string {
 			name     string
 			duration string
 		}{
-			{"Quick (3 sets)", "~2 mins"},
-			{"Standard (5 sets)", "~4 mins"},
-			{"Extended (8 sets)", "~6 mins"},
+			{"Quick (3 sets)", "~2m45s"},
+			{"Standard (5 sets)", "~4m35s"},
+			{"Extended (8 sets)", "~7m20s"},
 		}
 
 		for i, w := range workouts {
@@ -906,7 +906,7 @@ func (m model) viewWorkoutPicker() string {
 func (m model) viewModePicker() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("code-hiit"))
+	b.WriteString(titleStyle.Render("Code HIIT Lab"))
 	b.WriteString("\n")
 	b.WriteString(subtitleStyle.Render("Select Mode:"))
 	b.WriteString("\n\n")

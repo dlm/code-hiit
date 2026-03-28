@@ -60,7 +60,7 @@ Init() → tickCmd() → tickMsg → Update()
 - ✅ Timer counts down continuously (every 100ms)
 - ✅ Display updates without typing
 - ✅ Phase auto-transitions at 0:00
-- ✅ Warmup (15s) → Work (20s) → Recovery (10s) → Next set
+- ✅ Warmup (15s) → Work (30s) → Recovery (10s) → Next set
 - ✅ All 3 sets complete automatically if no typing
 
 ### Test Cases
@@ -74,7 +74,7 @@ Init() → tickCmd() → tickMsg → Update()
 **2. Phase Auto-Transition**
 - Let warmup timer expire
 - Expected: Automatically transitions to work phase
-- Verify: New snippet loads, timer resets to 00:20
+- Verify: New snippet loads, timer resets to 00:30
 
 **3. Work → Recovery Transition**
 - Complete warmup
