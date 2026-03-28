@@ -81,7 +81,7 @@ func (wp WorkoutPhase) Duration() int {
 	case WarmupPhase:
 		return 15 // seconds
 	case WorkPhase:
-		return 20 // seconds
+		return 30 // seconds
 	case RecoveryPhase:
 		return 10 // seconds
 	default:
