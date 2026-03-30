@@ -127,13 +127,9 @@ main() {
     # Ensure install directory exists
     if [ ! -d "$INSTALL_DIR" ]; then
         log_info "Creating directory: ${INSTALL_DIR}"
-        if mkdir -p "$INSTALL_DIR" 2>/dev/null; then
-            : # Success
-        elif command -v sudo >/dev/null 2>&1; then
-            log_warn "Need sudo to create ${INSTALL_DIR}"
-            sudo mkdir -p "$INSTALL_DIR"
-        else
-            log_error "Cannot create ${INSTALL_DIR} (no write permission and sudo not available)"
+        if ! mkdir -p "$INSTALL_DIR"; then
+            log_error "Failed to create ${INSTALL_DIR}"
+            log_error "Try running with a different directory: INSTALL_DIR=/path/to/dir"
             exit 1
         fi
     fi
