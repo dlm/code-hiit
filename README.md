@@ -16,9 +16,14 @@ Traditional typing trainers focus on sustained speed. Code HIIT Lab uses **High-
 
 ### Quick Install (Recommended)
 
-**macOS and Linux:**
+**Default install (auto-detects location):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dlm/code-hiit/main/install.sh | sh
+```
+
+**Custom install directory:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/dlm/code-hiit/main/install.sh | INSTALL_DIR=~/bin sh
 ```
 
 ### Homebrew

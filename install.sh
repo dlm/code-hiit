@@ -3,10 +3,20 @@ set -e
 
 # code-hiit installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/dlm/code-hiit/main/install.sh | sh
+#
+# Environment variables:
+#   INSTALL_DIR - Directory to install binary (default: auto-detect)
+#
+# Examples:
+#   curl -fsSL ... | sh                           # Auto-detect location
+#   curl -fsSL ... | INSTALL_DIR=~/.local/bin sh  # Custom directory
+#   curl -fsSL ... | INSTALL_DIR=~/bin sh         # Another custom location
 
 REPO="dlm/code-hiit"
 BINARY_NAME="code-hiit"
-INSTALL_DIR="/usr/local/bin"
+
+# Determine install directory (default to user's local bin)
+INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -114,42 +124,49 @@ main() {
         exit 1
     fi
 
-    # Determine install location
-    if [ -w "$INSTALL_DIR" ]; then
-        FINAL_INSTALL_DIR="$INSTALL_DIR"
-    else
-        # Try with sudo
-        if command -v sudo >/dev/null 2>&1; then
-            log_warn "Need sudo to install to ${INSTALL_DIR}"
-            sudo mv "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
-            log_info "✓ Installed to ${INSTALL_DIR}/${BINARY_NAME}"
-            log_info ""
-            log_info "Run '${BINARY_NAME}' to start!"
-            exit 0
+    # Ensure install directory exists
+    if [ ! -d "$INSTALL_DIR" ]; then
+        log_info "Creating directory: ${INSTALL_DIR}"
+        if mkdir -p "$INSTALL_DIR" 2>/dev/null; then
+            : # Success
+        elif command -v sudo >/dev/null 2>&1; then
+            log_warn "Need sudo to create ${INSTALL_DIR}"
+            sudo mkdir -p "$INSTALL_DIR"
         else
-            # Fallback to user bin directory
-            FINAL_INSTALL_DIR="${HOME}/.local/bin"
-            mkdir -p "$FINAL_INSTALL_DIR"
-            log_warn "Installing to ${FINAL_INSTALL_DIR} (no sudo available)"
-
-            # Check if directory is in PATH
-            case ":$PATH:" in
-                *":$FINAL_INSTALL_DIR:"*) ;;
-                *)
-                    log_warn "Note: ${FINAL_INSTALL_DIR} is not in your PATH"
-                    log_warn "Add this line to your shell rc file (~/.bashrc, ~/.zshrc, etc.):"
-                    log_warn "  export PATH=\"\${HOME}/.local/bin:\${PATH}\""
-                    ;;
-            esac
+            log_error "Cannot create ${INSTALL_DIR} (no write permission and sudo not available)"
+            exit 1
         fi
     fi
 
     # Install binary
-    mv "${TMP_DIR}/${BINARY_NAME}" "${FINAL_INSTALL_DIR}/${BINARY_NAME}"
+    log_info "Installing to ${INSTALL_DIR}/${BINARY_NAME}..."
+    if [ -w "$INSTALL_DIR" ]; then
+        mv "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+    elif command -v sudo >/dev/null 2>&1; then
+        log_warn "Need sudo to write to ${INSTALL_DIR}"
+        sudo mv "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+    else
+        log_error "Cannot write to ${INSTALL_DIR} (no write permission and sudo not available)"
+        exit 1
+    fi
 
-    log_info "✓ Installed to ${FINAL_INSTALL_DIR}/${BINARY_NAME}"
-    log_info ""
-    log_info "Run '${BINARY_NAME}' to start!"
+    log_info "✓ Installed to ${INSTALL_DIR}/${BINARY_NAME}"
+
+    # Check if directory is in PATH
+    case ":$PATH:" in
+        *":$INSTALL_DIR:"*)
+            log_info ""
+            log_info "Run '${BINARY_NAME}' to start!"
+            ;;
+        *)
+            log_info ""
+            log_warn "Note: ${INSTALL_DIR} is not in your PATH"
+            log_warn "Add this line to your shell rc file (~/.bashrc, ~/.zshrc, etc.):"
+            log_warn "  export PATH=\"${INSTALL_DIR}:\${PATH}\""
+            log_info ""
+            log_info "Or run directly: ${INSTALL_DIR}/${BINARY_NAME}"
+            ;;
+    esac
 }
 
 main
