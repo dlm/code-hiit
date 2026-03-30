@@ -27,17 +27,17 @@ build: $(PLATFORMS)
 linux/amd64:
 	@echo "Building for Linux (amd64)..."
 	@mkdir -p $(DIST_DIR)
-	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY)-linux-amd64
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY)-linux-amd64
 
 darwin/arm64:
 	@echo "Building for macOS (Apple Silicon)..."
 	@mkdir -p $(DIST_DIR)
-	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY)-darwin-arm64
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY)-darwin-arm64
 
 # Build for current platform only
 local:
 	@echo "Building for current platform..."
-	go build $(LDFLAGS) -o $(BINARY)
+	CGO_ENABLED=0 go build $(LDFLAGS) -o $(BINARY)
 
 # Install to /usr/local/bin
 install: local
