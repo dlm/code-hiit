@@ -12,6 +12,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// version is set at build time via -ldflags
+var version = "dev"
+
 type state int
 
 const (
@@ -1368,6 +1371,12 @@ func demoHIITTimer() model {
 }
 
 func main() {
+	// Check for version flag
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Printf("code-hiit version %s\n", version)
+		return
+	}
+
 	// Check if we should run HIIT demo
 	if len(os.Args) > 1 && os.Args[1] == "--demo-hiit" {
 		p := tea.NewProgram(demoHIITTimer())

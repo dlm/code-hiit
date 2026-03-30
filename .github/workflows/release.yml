@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build for all platforms
+        run: make build
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum code-hiit-* > checksums.txt
+          cat checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/code-hiit-linux-amd64
+            dist/code-hiit-darwin-arm64
+            dist/checksums.txt
+          body: |
+            ## Installation
+
+            ### Quick Install (Linux/macOS)
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/dlm/code-hiit/main/install.sh | sh
+            ```
+
+            ### Manual Installation
+
+            Download the appropriate binary for your system:
+            - **Linux (AMD64)**: `code-hiit-linux-amd64`
+            - **macOS (Apple Silicon)**: `code-hiit-darwin-arm64`
+
+            Then make it executable and move to your PATH:
+            ```bash
+            chmod +x code-hiit-*
+            sudo mv code-hiit-* /usr/local/bin/code-hiit
+            ```
+
+            ### Homebrew
+            ```bash
+            brew install dlm/tap/code-hiit
+            ```
+
+            ## Supported Platforms
+
+            - Linux AMD64 (x86_64)
+            - macOS ARM64 (Apple Silicon)
+
+            ## Verification
+
+            Verify the download with SHA256 checksums (see `checksums.txt`).
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

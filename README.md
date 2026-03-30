@@ -14,14 +14,50 @@ Traditional typing trainers focus on sustained speed. Code HIIT Lab uses **High-
 
 ## Installation
 
+### Quick Install (Recommended)
+
+**macOS and Linux:**
 ```bash
-go build -o code-hiit
+curl -fsSL https://raw.githubusercontent.com/dlm/code-hiit/main/install.sh | sh
+```
+
+### Homebrew
+
+```bash
+brew install dlm/tap/code-hiit
+```
+
+### Manual Installation
+
+Download pre-built binaries from the [releases page](https://github.com/dlm/code-hiit/releases/latest):
+
+1. Download the appropriate binary for your system:
+   - **Linux AMD64**: `code-hiit-linux-amd64`
+   - **macOS Apple Silicon**: `code-hiit-darwin-arm64`
+
+2. Make it executable and move to your PATH:
+   ```bash
+   chmod +x code-hiit-*
+   sudo mv code-hiit-* /usr/local/bin/code-hiit
+   ```
+
+**Supported Platforms:** Linux AMD64 (x86_64), macOS ARM64 (Apple Silicon)
+
+### Build from Source
+
+Requires Go 1.23 or later:
+
+```bash
+git clone https://github.com/dlm/code-hiit.git
+cd code-hiit
+make local
+# or: go build -o code-hiit
 ```
 
 ## Quick Start
 
 ```bash
-./code-hiit
+code-hiit
 ```
 
 Pick a mode, choose your workout length, and start typing. The timer runs fixed 15s/30s/10s intervals (warmup/work/recovery) while tracking your WPM and accuracy.

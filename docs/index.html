@@ -577,21 +577,37 @@
 
     <section class="section" id="install">
       <h2 class="section-title">Run code-hiit</h2>
-      <p class="section-sub">No fuss. Build the CLI, start an interval, and let history track your progress.</p>
+      <p class="section-sub">No fuss. Install once, start an interval, and let history track your progress.</p>
       <div class="install-steps">
         <div class="step">
-          <h4>1) Build</h4>
-          <code>go build -o code-hiit</code>
+          <h4>Quick Install (Recommended)</h4>
+          <code>curl -fsSL https://raw.githubusercontent.com/dlm/code-hiit/main/install.sh | sh</code>
+          <p class="section-sub" style="margin-top:10px;margin-bottom:0;">Detects your platform and installs automatically. Works on Linux and macOS.</p>
         </div>
         <div class="step">
-          <h4>2) Launch a session</h4>
-          <code>./code-hiit</code>
+          <h4>Homebrew</h4>
+          <code>brew install dlm/tap/code-hiit</code>
+          <p class="section-sub" style="margin-top:10px;margin-bottom:0;">For macOS and Linux users who prefer package managers.</p>
+        </div>
+        <div class="step">
+          <h4>Manual Install</h4>
+          <p class="section-sub" style="margin-top:0;margin-bottom:8px;">Download from <a href="https://github.com/dlm/code-hiit/releases/latest" style="color:var(--primary);">releases</a> (Linux AMD64 or macOS ARM64), then:</p>
+          <code>chmod +x code-hiit-*<br>sudo mv code-hiit-* /usr/local/bin/code-hiit</code>
+        </div>
+        <div class="step">
+          <h4>Launch a session</h4>
+          <code>code-hiit</code>
           <p class="section-sub" style="margin-top:10px;margin-bottom:0;">Pick a mode, then flow through 15s warmup / 30s work / 10s recovery intervals.</p>
         </div>
         <div class="step">
-          <h4>3) Track progress</h4>
+          <h4>Track progress</h4>
           <code>~/.config/code-hiit/history.json</code>
           <p class="section-sub" style="margin-top:10px;margin-bottom:0;">History saves automatically so you can see every set.</p>
+        </div>
+        <div class="step">
+          <h4>Build from source</h4>
+          <code>git clone https://github.com/dlm/code-hiit.git<br>cd code-hiit && make local</code>
+          <p class="section-sub" style="margin-top:10px;margin-bottom:0;">Requires Go 1.23 or later.</p>
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 # Binaries
 code-hiit
+dist/
 *.exe
 *.exe~
 *.dll
