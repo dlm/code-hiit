@@ -52,10 +52,11 @@ detect_arch() {
     esac
 }
 
-# Get latest release version
+# Get latest release version (including pre-releases)
 get_latest_version() {
-    curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | \
+    curl -fsSL "https://api.github.com/repos/${REPO}/releases" | \
         grep '"tag_name":' | \
+        head -1 | \
         sed -E 's/.*"([^"]+)".*/\1/'
 }
 
