@@ -136,13 +136,9 @@ main() {
 
     # Install binary
     log_info "Installing to ${INSTALL_DIR}/${BINARY_NAME}..."
-    if [ -w "$INSTALL_DIR" ]; then
-        mv "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
-    elif command -v sudo >/dev/null 2>&1; then
-        log_warn "Need sudo to write to ${INSTALL_DIR}"
-        sudo mv "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
-    else
-        log_error "Cannot write to ${INSTALL_DIR} (no write permission and sudo not available)"
+    if ! mv "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"; then
+        log_error "Failed to install to ${INSTALL_DIR}"
+        log_error "Try running with a different directory: INSTALL_DIR=/path/to/dir"
         exit 1
     fi
 
